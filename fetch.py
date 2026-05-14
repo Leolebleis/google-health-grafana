@@ -384,8 +384,15 @@ def _parse_active_minutes(dp: dict) -> dict:
     return result
 
 
+def _parse_duration_seconds(s: str) -> float:
+    """Parse duration string like '10231s' or '1069.775s' to minutes."""
+    if not s:
+        return 0.0
+    return float(s.rstrip("s")) / 60
+
+
 def fetch_exercises(token: str) -> list:
-    """Measurement: Activity Records"""
+    """Measurement: Activity Records. exerciseType stored as tag for filtering."""
     points = []
     try:
         data = api_get(token, "/users/me/dataTypes/exercise/dataPoints?pageSize=25")
@@ -395,16 +402,28 @@ def fetch_exercises(token: str) -> list:
             start_time = interval.get("startTime", "")
             if not start_time:
                 continue
+            metrics = ex.get("metricsSummary", {})
             points.append(
-                pt(
-                    "Activity Records",
-                    start_time,
-                    {
-                        "duration": float(ex.get("durationMinutes", 0)),
-                        "calories": float(ex.get("calories", 0)),
-                        "activityName": ex.get("exerciseType", "unknown"),
+                {
+                    "measurement": "Activity Records",
+                    "time": start_time,
+                    "tags": {
+                        "exerciseType": ex.get("exerciseType", "UNKNOWN"),
+                        "recordingMethod": dp.get("dataSource", {}).get(
+                            "recordingMethod", "UNKNOWN"
+                        ),
                     },
-                )
+                    "fields": {
+                        "duration_min": _parse_duration_seconds(
+                            ex.get("activeDuration", "")
+                        ),
+                        "calories": float(metrics.get("caloriesKcal", 0)),
+                        "avg_hr": float(
+                            metrics.get("averageHeartRateBeatsPerMinute", 0)
+                        ),
+                        "displayName": ex.get("displayName", ""),
+                    },
+                }
             )
         log.info(f"Fetched exercises: {len(points)} activities")
     except HTTPError as e:
@@ -440,10 +459,12 @@ def write_to_influx(cfg: dict, points: list):
             )
         if not fields:
             continue
+        tags = {"Device": cfg["device_name"]}
+        tags.update(p.get("tags", {}))
         influx_points.append(
             {
                 "measurement": p["measurement"],
-                "tags": {"Device": cfg["device_name"]},
+                "tags": tags,
                 "time": p["time"],
                 "fields": fields,
             }

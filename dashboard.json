@@ -5,7 +5,19 @@
     "timezone": "browser",
     "refresh": "5m",
     "time": {"from": "now-30d", "to": "now"},
-    "templating": {"list": []},
+    "templating": {"list": [
+      {
+        "name": "exercise_type",
+        "label": "Exercise Type",
+        "type": "query",
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "query": "SHOW TAG VALUES FROM \"Activity Records\" WITH KEY = \"exerciseType\"",
+        "multi": true,
+        "includeAll": true,
+        "current": {"text": "WEIGHTLIFTING", "value": "WEIGHTLIFTING"},
+        "refresh": 1
+      }
+    ]},
     "panels": [
       {
         "id": 1,
@@ -59,7 +71,7 @@
       },
       {
         "id": 3,
-        "title": "Calories This Week",
+        "title": "Calories",
         "type": "timeseries",
         "gridPos": {"h": 8, "w": 8, "x": 12, "y": 0},
         "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
@@ -77,7 +89,7 @@
         },
         "targets": [
           {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
-           "query": "SELECT max(\"value\") FROM \"calories\" WHERE time > now() - 7d GROUP BY time(1d) fill(none)", "alias": "Calories",
+           "query": "SELECT max(\"value\") FROM \"calories\" WHERE time > now() - 7d GROUP BY time(1d) fill(none)", "alias": "Burned",
            "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
         ]
       },
@@ -89,13 +101,13 @@
         "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
         "targets": [
           {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
-           "query": "SELECT count(\"duration\") FROM \"Activity Records\" WHERE time > now() - 7d GROUP BY time(1d) fill(0)",
+           "query": "SELECT count(\"duration_min\") FROM \"Activity Records\" WHERE time > now() - 7d AND \"exerciseType\" =~ /^$exercise_type$/ GROUP BY time(1d) fill(0)",
            "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
         ],
         "options": {
-          "SVGBaseFix": true, "add100Percentage": true, "centerAlignContent": true, "overflow": "visible",
+          "SVGBaseFix": true, "add100Percentage": true, "centerAlignContent": true, "overflow": "hidden",
           "html": "<div id=\"ex\"></div>",
-          "onRender": "const days=['M','T','W','T','F','S','S'];const c=htmlNode.querySelector('#ex');if(!c)return;let ad=new Set();try{const f=customProperties?.data||[];if(f.length>0&&f[0].fields){const tf=f[0].fields.find(x=>x.name==='Time');const vf=f[0].fields.find(x=>x.name!=='Time');if(tf&&vf){for(let i=0;i<tf.values.length;i++){if(vf.values[i]>0){const d=new Date(tf.values[i]);ad.add(d.getDay())}}}}}catch(e){}const dm=[1,2,3,4,5,6,0];let h='<div style=\"display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px\">';h+='<div style=\"display:flex;gap:8px\">';for(let i=0;i<7;i++){const a=ad.has(dm[i]);const bg=a?'#69db7c':'#3a3a5a';const fg=a?'#1a1a2e':'#666';h+=`<div style=\"width:30px;height:30px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:${fg}\">${days[i]}</div>`}h+='</div>';h+=`<div style=\"text-align:center\"><span style=\"font-size:28px;font-weight:bold;color:#69db7c\">${ad.size}</span><span style=\"font-size:16px;color:#888\"> / 7</span><div style=\"color:#888;font-size:12px;margin-top:2px\">days active</div></div>`;h+='</div>';c.innerHTML=h;"
+          "onRender": "const days=['M','T','W','T','F','S','S'];const c=htmlNode.querySelector('#ex');if(!c)return;let ad=new Set();try{const s=data.series||[];if(s.length>0){const tf=s[0].fields.find(x=>x.name==='Time');const vf=s[0].fields.find(x=>x.name!=='Time');if(tf&&vf){const tv=tf.values.toArray?tf.values.toArray():tf.values;const vv=vf.values.toArray?vf.values.toArray():vf.values;for(let i=0;i<tv.length;i++){if(vv[i]>0){const d=new Date(tv[i]);ad.add(d.getDay())}}}}}catch(e){}const dm=[1,2,3,4,5,6,0];let h='<div style=\"display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px\">';h+='<div style=\"display:flex;gap:5px\">';for(let i=0;i<7;i++){const a=ad.has(dm[i]);const bg=a?'#69db7c':'#3a3a5a';const fg=a?'#1a1a2e':'#666';h+=`<div style=\"width:24px;height:24px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:${fg}\">${days[i]}</div>`}h+='</div>';h+=`<div style=\"text-align:center\"><span style=\"font-size:28px;font-weight:bold;color:#69db7c\">${ad.size}</span><span style=\"font-size:16px;color:#888\"> / 7</span><div style=\"color:#888;font-size:12px;margin-top:2px\">days active</div></div>`;h+='</div>';c.innerHTML=h;"
         }
       },
       {
