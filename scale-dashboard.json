@@ -1,0 +1,142 @@
+{
+  "dashboard": {
+    "title": "Body Composition",
+    "uid": "body-composition",
+    "timezone": "browser",
+    "refresh": "",
+    "time": {"from": "now-90d", "to": "now"},
+    "templating": {"list": []},
+    "panels": [
+      {
+        "id": 1,
+        "title": "Weight",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "masskg", "decimals": 1,
+            "custom": {"lineWidth": 2, "pointSize": 6, "showPoints": "always", "spanNulls": true, "fillOpacity": 5},
+            "color": {"mode": "fixed", "fixedColor": "blue"},
+            "thresholds": {"mode": "absolute", "steps": [
+              {"color": "transparent", "value": null},
+              {"color": "green", "value": 82}
+            ]}
+          }
+        },
+        "targets": [
+          {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
+           "query": "SELECT \"weight\" FROM \"body_composition\" WHERE $timeFilter",
+           "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Body Fat %",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent", "decimals": 1,
+            "custom": {"lineWidth": 2, "pointSize": 6, "showPoints": "always", "spanNulls": true, "fillOpacity": 5},
+            "color": {"mode": "fixed", "fixedColor": "orange"},
+            "thresholds": {"mode": "absolute", "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 20},
+              {"color": "red", "value": 25}
+            ]}
+          }
+        },
+        "targets": [
+          {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
+           "query": "SELECT \"body_fat_pct\" FROM \"body_composition\" WHERE $timeFilter",
+           "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Muscle Mass",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "masskg", "decimals": 1,
+            "custom": {"lineWidth": 2, "pointSize": 6, "showPoints": "always", "spanNulls": true, "fillOpacity": 5},
+            "color": {"mode": "fixed", "fixedColor": "green"}
+          }
+        },
+        "targets": [
+          {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
+           "query": "SELECT \"muscle_mass\" FROM \"body_composition\" WHERE $timeFilter",
+           "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "BMI",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 8},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {
+          "defaults": {
+            "min": 15, "max": 40, "decimals": 1,
+            "thresholds": {"mode": "absolute", "steps": [
+              {"color": "blue", "value": null},
+              {"color": "green", "value": 18.5},
+              {"color": "yellow", "value": 25},
+              {"color": "red", "value": 30}
+            ]}
+          }
+        },
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}},
+        "targets": [
+          {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
+           "query": "SELECT last(\"bmi\") FROM \"body_composition\"",
+           "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Heart Rate at Weigh-in",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 8},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bpm", "decimals": 0,
+            "custom": {"lineWidth": 2, "pointSize": 6, "showPoints": "always", "spanNulls": true, "fillOpacity": 5},
+            "color": {"mode": "fixed", "fixedColor": "red"}
+          }
+        },
+        "targets": [
+          {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
+           "query": "SELECT \"heart_rate\" FROM \"body_composition\" WHERE $timeFilter",
+           "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Latest Reading",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {
+          "defaults": {"decimals": 1},
+          "overrides": [
+            {"matcher": {"id": "byName", "options": "Time"}, "properties": [{"id": "custom.width", "value": 200}]},
+            {"matcher": {"id": "byName", "options": "body_type"}, "properties": [{"id": "custom.width", "value": 80}]},
+            {"matcher": {"id": "byName", "options": "metabolic_age"}, "properties": [{"id": "unit", "value": "short"}]}
+          ]
+        },
+        "targets": [
+          {"refId": "A", "rawQuery": true, "resultFormat": "table",
+           "query": "SELECT * FROM \"body_composition\" ORDER BY time DESC LIMIT 5",
+           "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
+        ]
+      }
+    ]
+  },
+  "overwrite": true
+}
