@@ -1,0 +1,20 @@
+scale:
+  mac: "XX:XX:XX:XX:XX:XX"
+  bindkey: "your-32-char-hex-bindkey-here..."
+  scan_timeout: 300
+
+user:
+  name: leo
+  sex: male
+  height_cm: 178
+  birth_date: "1997-04-08"
+
+influxdb:
+  url: "http://localhost:8086"
+  token: "your-influxdb-admin-token"
+  org: "home"
+  bucket: "health"
+  measurement: "body_composition"
+
+dedup_window_seconds: 30
+log_level: INFO
