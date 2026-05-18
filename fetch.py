@@ -17,7 +17,8 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 from urllib.parse import urlencode
 
-from influxdb import InfluxDBClient
+from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 HEALTH_API = "https://health.googleapis.com/v4"
 TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -34,11 +35,10 @@ def load_config():
         "client_id": os.environ["GOOGLE_CLIENT_ID"],
         "client_secret": os.environ["GOOGLE_CLIENT_SECRET"],
         "token_path": Path(os.environ.get("TOKEN_PATH", "/app/tokens/token.json")),
-        "influx_host": os.environ.get("INFLUXDB_HOST", "localhost"),
-        "influx_port": int(os.environ.get("INFLUXDB_PORT", "8086")),
-        "influx_db": os.environ.get("INFLUXDB_DATABASE", "HealthStats"),
-        "influx_user": os.environ.get("INFLUXDB_USERNAME", ""),
-        "influx_pass": os.environ.get("INFLUXDB_PASSWORD", ""),
+        "influx_url": os.environ.get("INFLUXDB_URL", "http://localhost:8086"),
+        "influx_token": os.environ.get("INFLUXDB_TOKEN", ""),
+        "influx_org": os.environ.get("INFLUXDB_ORG", "home"),
+        "influx_bucket": os.environ.get("INFLUXDB_BUCKET", "health"),
         "device_name": os.environ.get("DEVICE_NAME", "Pixel Watch"),
         "backfill_days": int(os.environ.get("BACKFILL_DAYS", "7")),
         "interval_seconds": int(os.environ.get("INTERVAL_SECONDS", "300")),
@@ -419,13 +419,11 @@ def write_to_influx(cfg: dict, points: list):
     if not points:
         return
     client = InfluxDBClient(
-        host=cfg["influx_host"],
-        port=cfg["influx_port"],
-        username=cfg["influx_user"],
-        password=cfg["influx_pass"],
-        database=cfg["influx_db"],
+        url=cfg["influx_url"],
+        token=cfg["influx_token"],
+        org=cfg["influx_org"],
     )
-    client.create_database(cfg["influx_db"])
+    write_api = client.write_api(write_options=SYNCHRONOUS)
 
     influx_points = []
     for p in points:
@@ -440,18 +438,18 @@ def write_to_influx(cfg: dict, points: list):
             )
         if not fields:
             continue
-        influx_points.append(
-            {
-                "measurement": p["measurement"],
-                "tags": {"Device": cfg["device_name"]},
-                "time": p["time"],
-                "fields": fields,
-            }
+        point = (
+            Point(p["measurement"]).tag("Device", cfg["device_name"]).time(p["time"])
         )
+        for k, v in fields.items():
+            point = point.field(k, v)
+        influx_points.append(point)
 
     if influx_points:
-        client.write_points(influx_points)
+        write_api.write(bucket=cfg["influx_bucket"], record=influx_points)
         log.info(f"Wrote {len(influx_points)} points to InfluxDB")
+
+    client.close()
 
 
 # --- Main loop ---
