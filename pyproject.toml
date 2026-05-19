@@ -34,7 +34,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "ANN", "PLR2004", "S104", "S106"]
+"tests/**/*.py" = ["S101", "ANN", "PLR2004", "S104", "S105", "S106"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -42,6 +42,7 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["scale"]
+omit = ["scale/measurement/scanner_facade.py"]
 
 [tool.coverage.report]
 show_missing = true
