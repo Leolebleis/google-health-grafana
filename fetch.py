@@ -34,8 +34,7 @@ def load_config() -> dict:
         "client_id": os.environ["GOOGLE_CLIENT_ID"],
         "client_secret": os.environ["GOOGLE_CLIENT_SECRET"],
         "token_path": Path(os.environ.get("TOKEN_PATH", "/app/tokens/token.json")),
-        "influx_host": os.environ.get("INFLUXDB_HOST", "localhost"),
-        "influx_port": int(os.environ.get("INFLUXDB_PORT", "8181")),
+        "influx_url": os.environ.get("INFLUXDB_URL", "http://localhost:8181"),
         "influx_token": os.environ.get("INFLUXDB_TOKEN", ""),
         "influx_database": os.environ.get("INFLUXDB_DATABASE", "health"),
         "device_name": os.environ.get("DEVICE_NAME", "Pixel Watch"),
@@ -399,8 +398,7 @@ def write_to_influx(cfg: dict, points: list) -> None:
     if not points:
         return
     client = InfluxDBClient3(
-        host=cfg["influx_host"],
-        port=cfg["influx_port"],
+        host=cfg["influx_url"],
         token=cfg["influx_token"],
         database=cfg["influx_database"],
     )

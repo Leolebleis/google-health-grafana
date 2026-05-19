@@ -10,16 +10,15 @@ log = logging.getLogger(__name__)
 
 
 class InfluxWriter:
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
-        host: str,
-        port: int,
+        url: str,
         token: str,
         database: str,
         user: str,
         measurement_name: str = "body_composition",
     ) -> None:
-        self._client = InfluxDBClient3(host=host, port=port, token=token, database=database)
+        self._client = InfluxDBClient3(host=url, token=token, database=database)
         self._user = user
         self._measurement_name = measurement_name
 

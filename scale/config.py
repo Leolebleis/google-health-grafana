@@ -15,8 +15,7 @@ class ScaleConfig:
 
 @dataclass(frozen=True)
 class InfluxConfig:
-    host: str
-    port: int
+    url: str
     token: str
     database: str
     measurement: str
@@ -51,8 +50,7 @@ def load_config(path: Path = Path("config.yaml")) -> AppConfig:
             birth_date=date.fromisoformat(usr["birth_date"]),
         ),
         influx=InfluxConfig(
-            host=inf["host"],
-            port=inf.get("port", 8181),
+            url=inf["url"],
             token=inf["token"],
             database=inf["database"],
             measurement=inf.get("measurement", "body_composition"),

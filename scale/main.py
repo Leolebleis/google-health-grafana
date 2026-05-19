@@ -21,8 +21,7 @@ async def run() -> None:
     log = logging.getLogger(__name__)
 
     writer = InfluxWriter(
-        host=cfg.influx.host,
-        port=cfg.influx.port,
+        url=cfg.influx.url,
         token=cfg.influx.token,
         database=cfg.influx.database,
         user=cfg.user.name,

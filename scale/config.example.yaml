@@ -9,8 +9,7 @@ user:
   birth_date: "1997-04-08"
 
 influxdb:
-  host: "localhost"
-  port: 8181
+  url: "http://localhost:8181"
   token: "your-influxdb-admin-token"
   database: "health"
   measurement: "body_composition"

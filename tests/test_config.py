@@ -19,8 +19,7 @@ user:
   birth_date: "1995-06-15"
 
 influxdb:
-  host: "localhost"
-  port: 8181
+  url: "http://localhost:8181"
   token: "my-token"
   database: "health"
   measurement: "body_composition"
@@ -48,7 +47,7 @@ user:
   birth_date: "1990-01-01"
 
 influxdb:
-  host: "influx"
+  url: "http://influx:8181"
   token: "tok"
   database: "bucket"
 """
@@ -68,8 +67,7 @@ def test_full_config_parses_correctly(config_yaml: Path) -> None:
     assert cfg.user.height_cm == 165
     assert cfg.user.birth_date == date(1995, 6, 15)
 
-    assert cfg.influx.host == "localhost"
-    assert cfg.influx.port == 8181
+    assert cfg.influx.url == "http://localhost:8181"
     assert cfg.influx.token == "my-token"
     assert cfg.influx.database == "health"
     assert cfg.influx.measurement == "body_composition"

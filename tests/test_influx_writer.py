@@ -40,8 +40,7 @@ def test_persist_calls_write(mock_client_cls: MagicMock) -> None:
     mock_client_cls.return_value = mock_client
 
     writer = InfluxWriter(
-        host="localhost",
-        port=8181,
+        url="http://localhost:8181",
         token="token",
         database="health",
         user="alice",
@@ -61,8 +60,7 @@ def test_close_calls_client_close(mock_client_cls: MagicMock) -> None:
     mock_client_cls.return_value = mock_client
 
     writer = InfluxWriter(
-        host="localhost",
-        port=8181,
+        url="http://localhost:8181",
         token="token",
         database="health",
         user="alice",
@@ -78,11 +76,10 @@ def test_influx_client_constructed_with_correct_args(mock_client_cls: MagicMock)
     mock_client_cls.return_value = mock_client
 
     InfluxWriter(
-        host="influx-host",
-        port=8181,
+        url="http://influx-host:8181",
         token="tok",
         database="mydb",
         user="bob",
     )
 
-    mock_client_cls.assert_called_once_with(host="influx-host", port=8181, token="tok", database="mydb")
+    mock_client_cls.assert_called_once_with(host="http://influx-host:8181", token="tok", database="mydb")
