@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 
 from bleak import BleakScanner
@@ -19,7 +19,7 @@ class BleScaleScanner:
         self._mac_bytes = bytes.fromhex(mac_address.replace(":", ""))
         self._key_bytes = bytes.fromhex(bind_key)
 
-    async def scan(self) -> AsyncIterator[Measurement]:
+    async def scan(self) -> AsyncGenerator[Measurement]:
         queue: asyncio.Queue[Measurement] = asyncio.Queue()
 
         def _on_advertisement(device: BLEDevice, adv: AdvertisementData) -> None:

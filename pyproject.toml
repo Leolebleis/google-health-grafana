@@ -46,7 +46,7 @@ omit = ["scale/measurement/scanner_facade.py"]
 
 [tool.coverage.report]
 show_missing = true
-fail_under = 55
+fail_under = 80
 
 [build-system]
 requires = ["hatchling"]
