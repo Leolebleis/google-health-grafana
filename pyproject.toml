@@ -6,7 +6,7 @@ requires-python = ">=3.13"
 dependencies = [
     "bleak>=0.21.0",
     "pycryptodome>=3.20.0",
-    "influxdb-client>=1.40.0",
+    "influxdb3-python>=0.14.0",
     "pyyaml>=6.0",
 ]
 
