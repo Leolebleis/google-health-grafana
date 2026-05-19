@@ -12,8 +12,6 @@ from scale.measurement.scanner.s400_decrypt import s400_decrypt
 
 log = logging.getLogger(__name__)
 
-BODY_COMPOSITION_UUID = "0000181b-0000-1000-8000-00805f9b34fb"
-
 
 class BleScaleScanner:
     def __init__(self, mac_address: str, bind_key: str):
@@ -27,11 +25,7 @@ class BleScaleScanner:
             if device.address.upper() != self._mac:
                 return
 
-            service_data = adv.service_data
-            for uuid, data in service_data.items():
-                if "181b" not in uuid.lower():
-                    continue
-
+            for uuid, data in adv.service_data.items():
                 raw = s400_decrypt(data, self._mac, self._bind_key)
                 if raw is None:
                     continue
