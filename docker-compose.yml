@@ -9,10 +9,9 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - TOKEN_PATH=/app/tokens/token.json
-      - INFLUXDB_URL=http://health-influxdb:8086
+      - INFLUXDB_URL=http://health-influxdb:8181
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
-      - INFLUXDB_ORG=${INFLUXDB_ORG:-home}
-      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-health}
+      - INFLUXDB_DATABASE=${INFLUXDB_DATABASE:-health}
       - DEVICE_NAME=${DEVICE_NAME:-Pixel Watch}
       - BACKFILL_DAYS=${BACKFILL_DAYS:-30}
       - INTERVAL_SECONDS=${INTERVAL_SECONDS:-300}
@@ -21,17 +20,19 @@ services:
       - health-influxdb
 
   health-influxdb:
-    image: influxdb:2.7
+    image: influxdb:3-core
     container_name: health-influxdb
     restart: unless-stopped
     ports:
-      - "8086:8086"
-    environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_INIT_USERNAME:-leo}
-      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_INIT_PASSWORD}
-      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-home}
-      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-health}
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN}
+      - "8181:8181"
+    command: >
+      influxdb3 serve
+      --node-id=rpi-health
+      --object-store=file
+      --data-dir=/var/lib/influxdb3/data
+      --exec-mem-pool-bytes=536870912
+      --datafusion-num-threads=2
+      --disable-telemetry-upload
+      --without-auth
     volumes:
-      - ./influxdb2:/var/lib/influxdb2
+      - ./influxdb3:/var/lib/influxdb3/data

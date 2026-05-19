@@ -23,8 +23,7 @@ async def run() -> None:
     writer = InfluxWriter(
         url=cfg.influx.url,
         token=cfg.influx.token,
-        org=cfg.influx.org,
-        bucket=cfg.influx.bucket,
+        database=cfg.influx.database,
         user=cfg.user.name,
         measurement_name=cfg.influx.measurement,
     )

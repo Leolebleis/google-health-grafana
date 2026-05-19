@@ -1,7 +1,6 @@
 import logging
 
-from influxdb_client import InfluxDBClient
-from influxdb_client.client.write_api import SYNCHRONOUS
+from influxdb_client_3 import InfluxDBClient3
 
 from scale.measurement.model.body_composition import BodyComposition
 from scale.measurement.model.measurement import Measurement
@@ -11,19 +10,15 @@ log = logging.getLogger(__name__)
 
 
 class InfluxWriter:
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         url: str,
         token: str,
-        org: str,
-        bucket: str,
+        database: str,
         user: str,
         measurement_name: str = "body_composition",
     ) -> None:
-        self._client = InfluxDBClient(url=url, token=token, org=org)
-        self._write_api = self._client.write_api(write_options=SYNCHRONOUS)
-        self._bucket = bucket
-        self._org = org
+        self._client = InfluxDBClient3(host=url, token=token, database=database)
         self._user = user
         self._measurement_name = measurement_name
 
@@ -34,7 +29,7 @@ class InfluxWriter:
             user=self._user,
             measurement_name=self._measurement_name,
         )
-        self._write_api.write(bucket=self._bucket, org=self._org, record=point)
+        self._client.write(record=point)
         log.info("Wrote body composition to InfluxDB")
 
     def close(self) -> None:

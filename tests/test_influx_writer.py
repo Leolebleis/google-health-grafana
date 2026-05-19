@@ -34,44 +34,35 @@ def _make_measurement() -> Measurement:
     )
 
 
-@patch("scale.measurement.persistence.influx_writer.InfluxDBClient")
-def test_persist_calls_write_api(mock_client_cls: MagicMock) -> None:
+@patch("scale.measurement.persistence.influx_writer.InfluxDBClient3")
+def test_persist_calls_write(mock_client_cls: MagicMock) -> None:
     mock_client = MagicMock()
-    mock_write_api = MagicMock()
     mock_client_cls.return_value = mock_client
-    mock_client.write_api.return_value = mock_write_api
 
     writer = InfluxWriter(
-        url="http://localhost:8086",
+        url="http://localhost:8181",
         token="token",
-        org="my-org",
-        bucket="health",
+        database="health",
         user="alice",
         measurement_name="body_composition",
     )
 
-    bc = _make_body_composition()
-    m = _make_measurement()
-    writer.persist(m, bc)
+    writer.persist(_make_measurement(), _make_body_composition())
 
-    mock_write_api.write.assert_called_once()
-    call_kwargs = mock_write_api.write.call_args
-    assert call_kwargs.kwargs["bucket"] == "health"
-    assert call_kwargs.kwargs["org"] == "my-org"
+    mock_client.write.assert_called_once()
+    call_kwargs = mock_client.write.call_args
     assert call_kwargs.kwargs["record"] is not None
 
 
-@patch("scale.measurement.persistence.influx_writer.InfluxDBClient")
+@patch("scale.measurement.persistence.influx_writer.InfluxDBClient3")
 def test_close_calls_client_close(mock_client_cls: MagicMock) -> None:
     mock_client = MagicMock()
     mock_client_cls.return_value = mock_client
-    mock_client.write_api.return_value = MagicMock()
 
     writer = InfluxWriter(
-        url="http://localhost:8086",
+        url="http://localhost:8181",
         token="token",
-        org="my-org",
-        bucket="health",
+        database="health",
         user="alice",
     )
     writer.close()
@@ -79,18 +70,16 @@ def test_close_calls_client_close(mock_client_cls: MagicMock) -> None:
     mock_client.close.assert_called_once()
 
 
-@patch("scale.measurement.persistence.influx_writer.InfluxDBClient")
+@patch("scale.measurement.persistence.influx_writer.InfluxDBClient3")
 def test_influx_client_constructed_with_correct_args(mock_client_cls: MagicMock) -> None:
     mock_client = MagicMock()
     mock_client_cls.return_value = mock_client
-    mock_client.write_api.return_value = MagicMock()
 
     InfluxWriter(
-        url="http://influx:8086",
+        url="http://influx-host:8181",
         token="tok",
-        org="org",
-        bucket="bucket",
+        database="mydb",
         user="bob",
     )
 
-    mock_client_cls.assert_called_once_with(url="http://influx:8086", token="tok", org="org")
+    mock_client_cls.assert_called_once_with(host="http://influx-host:8181", token="tok", database="mydb")

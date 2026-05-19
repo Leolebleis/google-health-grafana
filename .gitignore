@@ -2,7 +2,8 @@ docker-compose.override.yml
 .env
 tokens/
 influxdb/
-influxdb2/
+influxdb3/
+influxdb3-token
 .superpowers/
 scale/config.yaml
 .venv/

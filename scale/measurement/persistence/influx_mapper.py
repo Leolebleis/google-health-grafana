@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from influxdb_client import Point
+from influxdb_client_3 import Point
 
 from scale.measurement.model.body_composition import BodyComposition
 

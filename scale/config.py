@@ -17,8 +17,7 @@ class ScaleConfig:
 class InfluxConfig:
     url: str
     token: str
-    org: str
-    bucket: str
+    database: str
     measurement: str
 
 
@@ -53,8 +52,7 @@ def load_config(path: Path = Path("config.yaml")) -> AppConfig:
         influx=InfluxConfig(
             url=inf["url"],
             token=inf["token"],
-            org=inf["org"],
-            bucket=inf["bucket"],
+            database=inf["database"],
             measurement=inf.get("measurement", "body_composition"),
         ),
         dedup_window_seconds=raw.get("dedup_window_seconds", 30),

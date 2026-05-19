@@ -9,10 +9,9 @@ user:
   birth_date: "1997-04-08"
 
 influxdb:
-  url: "http://localhost:8086"
+  url: "http://localhost:8181"
   token: "your-influxdb-admin-token"
-  org: "home"
-  bucket: "health"
+  database: "health"
   measurement: "body_composition"
 
 dedup_window_seconds: 30
