@@ -2,4 +2,11 @@ docker-compose.override.yml
 .env
 tokens/
 influxdb/
+influxdb2/
 .superpowers/
+scale/config.yaml
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage

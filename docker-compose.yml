@@ -9,11 +9,10 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - TOKEN_PATH=/app/tokens/token.json
-      - INFLUXDB_HOST=health-influxdb
-      - INFLUXDB_PORT=8086
-      - INFLUXDB_DATABASE=HealthStats
-      - INFLUXDB_USERNAME=health_user
-      - INFLUXDB_PASSWORD=health_password
+      - INFLUXDB_URL=http://health-influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-home}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-health}
       - DEVICE_NAME=${DEVICE_NAME:-Pixel Watch}
       - BACKFILL_DAYS=${BACKFILL_DAYS:-30}
       - INTERVAL_SECONDS=${INTERVAL_SECONDS:-300}
@@ -22,13 +21,17 @@ services:
       - health-influxdb
 
   health-influxdb:
-    image: influxdb:1.11
+    image: influxdb:2.7
     container_name: health-influxdb
     restart: unless-stopped
+    ports:
+      - "8086:8086"
     environment:
-      - INFLUXDB_DB=HealthStats
-      - INFLUXDB_USER=health_user
-      - INFLUXDB_USER_PASSWORD=health_password
-      - INFLUXDB_DATA_INDEX_VERSION=tsi1
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_INIT_USERNAME:-leo}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_INIT_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-home}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-health}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN}
     volumes:
-      - ./influxdb:/var/lib/influxdb
+      - ./influxdb2:/var/lib/influxdb2

@@ -1,0 +1,15 @@
+[Unit]
+Description=Xiaomi S400 Scale Reader
+After=bluetooth.target
+
+[Service]
+Type=simple
+User=leo
+WorkingDirectory=/home/leo/documents/code/raspberrypi/google-health-grafana
+ExecStart=/home/leo/documents/code/raspberrypi/google-health-grafana/.venv/bin/python -m scale.main
+Restart=always
+RestartSec=10
+Environment=PYTHONPATH=/home/leo/documents/code/raspberrypi/google-health-grafana
+
+[Install]
+WantedBy=multi-user.target
