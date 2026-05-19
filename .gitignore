@@ -9,3 +9,4 @@ scale/config.yaml
 __pycache__/
 *.pyc
 .pytest_cache/
+.coverage
