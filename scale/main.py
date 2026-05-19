@@ -21,10 +21,10 @@ async def run() -> None:
     log = logging.getLogger(__name__)
 
     writer = InfluxWriter(
-        url=cfg.influx.url,
+        host=cfg.influx.host,
+        port=cfg.influx.port,
         token=cfg.influx.token,
-        org=cfg.influx.org,
-        bucket=cfg.influx.bucket,
+        database=cfg.influx.database,
         user=cfg.user.name,
         measurement_name=cfg.influx.measurement,
     )

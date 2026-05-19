@@ -19,10 +19,10 @@ user:
   birth_date: "1995-06-15"
 
 influxdb:
-  url: "http://localhost:8086"
+  host: "localhost"
+  port: 8181
   token: "my-token"
-  org: "my-org"
-  bucket: "health"
+  database: "health"
   measurement: "body_composition"
 
 dedup_window_seconds: 60
@@ -48,10 +48,9 @@ user:
   birth_date: "1990-01-01"
 
 influxdb:
-  url: "http://influx:8086"
+  host: "influx"
   token: "tok"
-  org: "org"
-  bucket: "bucket"
+  database: "bucket"
 """
     p = tmp_path / "config.yaml"
     p.write_text(content)
@@ -69,10 +68,10 @@ def test_full_config_parses_correctly(config_yaml: Path) -> None:
     assert cfg.user.height_cm == 165
     assert cfg.user.birth_date == date(1995, 6, 15)
 
-    assert cfg.influx.url == "http://localhost:8086"
+    assert cfg.influx.host == "localhost"
+    assert cfg.influx.port == 8181
     assert cfg.influx.token == "my-token"
-    assert cfg.influx.org == "my-org"
-    assert cfg.influx.bucket == "health"
+    assert cfg.influx.database == "health"
     assert cfg.influx.measurement == "body_composition"
 
     assert cfg.dedup_window_seconds == 60
