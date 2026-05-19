@@ -1,16 +1,16 @@
-#!/usr/bin/env python3
 import asyncio
 import logging
 import signal
+import types
 from pathlib import Path
 
 from scale.config import load_config
-from scale.measurement.service import MeasurementService
-from scale.measurement.scanner.ble_scanner import BleScaleScanner
 from scale.measurement.persistence.influx_writer import InfluxWriter
+from scale.measurement.scanner.ble_scanner import BleScaleScanner
+from scale.measurement.service import MeasurementService
 
 
-async def run():
+async def run() -> None:
     config_path = Path(__file__).parent / "config.yaml"
     cfg = load_config(config_path)
 
@@ -51,10 +51,10 @@ async def run():
         writer.close()
 
 
-def main():
+def main() -> None:
     loop = asyncio.new_event_loop()
 
-    def _shutdown(sig, frame):
+    def _shutdown(_sig: int, _frame: types.FrameType | None) -> None:
         for task in asyncio.all_tasks(loop):
             task.cancel()
 

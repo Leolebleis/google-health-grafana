@@ -6,7 +6,7 @@ After=bluetooth.target
 Type=simple
 User=leo
 WorkingDirectory=/home/leo/documents/code/raspberrypi/google-health-grafana
-ExecStart=/home/leo/documents/code/raspberrypi/google-health-grafana/scale/.venv/bin/python -m scale.main
+ExecStart=/home/leo/documents/code/raspberrypi/google-health-grafana/.venv/bin/python -m scale.main
 Restart=always
 RestartSec=10
 Environment=PYTHONPATH=/home/leo/documents/code/raspberrypi/google-health-grafana

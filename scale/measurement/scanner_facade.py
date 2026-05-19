@@ -1,4 +1,6 @@
-from typing import Protocol, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Protocol
+
 from scale.measurement.model.measurement import Measurement
 
 

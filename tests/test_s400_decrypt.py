@@ -1,6 +1,5 @@
 from scale.measurement.scanner.s400_decrypt import s400_decrypt
 
-
 MAC_BYTES = bytes.fromhex("84469364A5E6")
 KEY_BYTES = bytes.fromhex("58305740b64e4b425e518aa1f4e51339")
 WRONG_KEY = bytes.fromhex("00000000000000000000000000000000")

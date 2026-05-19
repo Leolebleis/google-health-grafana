@@ -1,11 +1,14 @@
 import logging
-from datetime import datetime
+from typing import TYPE_CHECKING
 
-from scale.measurement.model.measurement import Measurement
-from scale.measurement.model.user_profile import UserProfile
-from scale.measurement.model.body_composition import BodyComposition
 from scale.measurement.calculator import calculate_body_composition
 from scale.measurement.dao import MeasurementDAO
+from scale.measurement.model.body_composition import BodyComposition
+from scale.measurement.model.measurement import Measurement
+from scale.measurement.model.user_profile import UserProfile
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +19,7 @@ class MeasurementService:
         profile: UserProfile,
         dao: MeasurementDAO,
         dedup_window_seconds: int = 30,
-    ):
+    ) -> None:
         self._profile = profile
         self._dao = dao
         self._dedup_window = dedup_window_seconds

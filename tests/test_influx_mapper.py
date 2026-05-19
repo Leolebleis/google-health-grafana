@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from scale.measurement.model.body_composition import BodyComposition
 from scale.measurement.persistence.influx_mapper import to_influx_point
 
@@ -20,7 +21,7 @@ def test_maps_all_fields():
         heart_rate=72,
         impedance=500.0,
     )
-    ts = datetime(2026, 5, 18, 10, 0, 0, tzinfo=timezone.utc)
+    ts = datetime(2026, 5, 18, 10, 0, 0, tzinfo=UTC)
     point = to_influx_point(bc, ts, user="leo", measurement_name="body_composition")
 
     line = point.to_line_protocol()

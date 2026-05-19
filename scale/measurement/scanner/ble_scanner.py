@@ -1,7 +1,7 @@
 import asyncio
 import logging
-from datetime import datetime, timezone
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class BleScaleScanner:
-    def __init__(self, mac_address: str, bind_key: str):
+    def __init__(self, mac_address: str, bind_key: str) -> None:
         self._mac = mac_address.upper()
         self._mac_bytes = bytes.fromhex(mac_address.replace(":", ""))
         self._key_bytes = bytes.fromhex(bind_key)
@@ -22,11 +22,11 @@ class BleScaleScanner:
     async def scan(self) -> AsyncIterator[Measurement]:
         queue: asyncio.Queue[Measurement] = asyncio.Queue()
 
-        def _on_advertisement(device: BLEDevice, adv: AdvertisementData):
+        def _on_advertisement(device: BLEDevice, adv: AdvertisementData) -> None:
             if device.address.upper() != self._mac:
                 return
 
-            for uuid, data in adv.service_data.items():
+            for data in adv.service_data.values():
                 raw = s400_decrypt(data, self._mac_bytes, self._key_bytes)
                 if raw is None:
                     continue
@@ -35,7 +35,7 @@ class BleScaleScanner:
                     weight_kg=raw.weight_kg,
                     impedance=raw.impedance,
                     heart_rate=raw.heart_rate,
-                    timestamp=datetime.now(timezone.utc),
+                    timestamp=datetime.now(UTC),
                 )
                 log.info(
                     "BLE: %.1f kg, impedance=%s, hr=%s",

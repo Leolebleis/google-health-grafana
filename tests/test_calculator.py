@@ -1,27 +1,23 @@
-from datetime import date
+from datetime import UTC, date, datetime
 
+from scale.measurement.calculator import calculate_body_composition
 from scale.measurement.model.measurement import Measurement
 from scale.measurement.model.user_profile import UserProfile
-from scale.measurement.calculator import calculate_body_composition
 
 TOLERANCE = 0.01
 
 
 def _make_measurement(weight: float, impedance: float) -> Measurement:
-    from datetime import datetime, timezone
-
     return Measurement(
         weight_kg=weight,
         impedance=impedance,
         heart_rate=None,
-        timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        timestamp=datetime(2026, 1, 1, tzinfo=UTC),
     )
 
 
 def test_male_30y_180cm_80kg_500ohm():
-    profile = UserProfile(
-        name="test", sex="male", height_cm=180, birth_date=date(1996, 1, 1)
-    )
+    profile = UserProfile(name="test", sex="male", height_cm=180, birth_date=date(1996, 1, 1))
     m = _make_measurement(80.0, 500.0)
     bc = calculate_body_composition(m, profile, reference_date=date(2026, 1, 1))
     assert abs(bc.bmi - 24.691) < TOLERANCE
@@ -33,9 +29,7 @@ def test_male_30y_180cm_80kg_500ohm():
 
 
 def test_female_28y_165cm_60kg_520ohm():
-    profile = UserProfile(
-        name="test", sex="female", height_cm=165, birth_date=date(1998, 1, 1)
-    )
+    profile = UserProfile(name="test", sex="female", height_cm=165, birth_date=date(1998, 1, 1))
     m = _make_measurement(60.0, 520.0)
     bc = calculate_body_composition(m, profile, reference_date=date(2026, 1, 1))
     assert abs(bc.bmi - 22.039) < TOLERANCE
@@ -45,9 +39,7 @@ def test_female_28y_165cm_60kg_520ohm():
 
 
 def test_male_45y_175cm_95kg_430ohm():
-    profile = UserProfile(
-        name="test", sex="male", height_cm=175, birth_date=date(1981, 1, 1)
-    )
+    profile = UserProfile(name="test", sex="male", height_cm=175, birth_date=date(1981, 1, 1))
     m = _make_measurement(95.0, 430.0)
     bc = calculate_body_composition(m, profile, reference_date=date(2026, 1, 1))
     assert abs(bc.bmi - 31.020) < TOLERANCE
@@ -57,9 +49,7 @@ def test_male_45y_175cm_95kg_430ohm():
 
 
 def test_no_impedance_still_calculates_bmi():
-    profile = UserProfile(
-        name="test", sex="male", height_cm=178, birth_date=date(1997, 4, 8)
-    )
+    profile = UserProfile(name="test", sex="male", height_cm=178, birth_date=date(1997, 4, 8))
     m = _make_measurement(80.0, None)
     bc = calculate_body_composition(m, profile, reference_date=date(2026, 5, 18))
     assert abs(bc.bmi - 25.249) < TOLERANCE

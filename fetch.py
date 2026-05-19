@@ -11,17 +11,17 @@ import json
 import logging
 import os
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from urllib.error import HTTPError
-from urllib.request import Request, urlopen
 from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 HEALTH_API = "https://health.googleapis.com/v4"
-TOKEN_URL = "https://oauth2.googleapis.com/token"
+TOKEN_URL = "https://oauth2.googleapis.com/token"  # noqa: S105
 
 logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "INFO"),
@@ -30,7 +30,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 
-def load_config():
+def load_config() -> dict:
     return {
         "client_id": os.environ["GOOGLE_CLIENT_ID"],
         "client_secret": os.environ["GOOGLE_CLIENT_SECRET"],
@@ -49,13 +49,13 @@ def load_config():
 
 
 def load_tokens(path: Path) -> dict:
-    with open(path) as f:
+    with path.open() as f:
         return json.load(f)
 
 
-def save_tokens(path: Path, tokens: dict):
+def save_tokens(path: Path, tokens: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as f:
+    with path.open("w") as f:
         json.dump(tokens, f)
 
 
@@ -69,7 +69,7 @@ def refresh_access_token(cfg: dict) -> str:
             "grant_type": "refresh_token",
         }
     ).encode()
-    resp = json.loads(urlopen(Request(TOKEN_URL, data=data)).read())
+    resp = json.loads(urlopen(Request(TOKEN_URL, data=data)).read())  # noqa: S310
     tokens["access_token"] = resp["access_token"]
     save_tokens(cfg["token_path"], tokens)
     log.info("Token refreshed")
@@ -80,12 +80,12 @@ def refresh_access_token(cfg: dict) -> str:
 
 
 def api_get(token: str, path: str) -> dict:
-    req = Request(f"{HEALTH_API}{path}", headers={"Authorization": f"Bearer {token}"})
-    return json.loads(urlopen(req).read())
+    req = Request(f"{HEALTH_API}{path}", headers={"Authorization": f"Bearer {token}"})  # noqa: S310
+    return json.loads(urlopen(req).read())  # noqa: S310
 
 
 def api_post(token: str, path: str, body: dict) -> dict:
-    req = Request(
+    req = Request(  # noqa: S310
         f"{HEALTH_API}{path}",
         data=json.dumps(body).encode(),
         headers={
@@ -93,7 +93,7 @@ def api_post(token: str, path: str, body: dict) -> dict:
             "Content-Type": "application/json",
         },
     )
-    return json.loads(urlopen(req).read())
+    return json.loads(urlopen(req).read())  # noqa: S310
 
 
 def date_to_civil(d: datetime) -> dict:
@@ -110,7 +110,7 @@ def civil_to_datetime(civil: dict) -> datetime:
         t.get("hours", 0),
         t.get("minutes", 0),
         t.get("seconds", 0),
-        tzinfo=timezone.utc,
+        tzinfo=UTC,
     )
 
 
@@ -125,7 +125,7 @@ def parse_time(val: dict) -> str:
     return ""
 
 
-def pt(measurement, ts, fields):
+def pt(measurement: str, ts: str, fields: dict) -> dict:
     return {"measurement": measurement, "time": ts, "fields": fields}
 
 
@@ -143,7 +143,7 @@ def fetch_weight(token: str) -> list:
             continue
         kg = w.get("weightGrams", 0) / 1000
         points.append(pt("weight", ts, {"value": kg}))
-    log.info(f"Fetched weight: {len(points)} points")
+    log.info("Fetched weight: %s points", len(points))
     return points
 
 
@@ -157,7 +157,7 @@ def fetch_body_fat(token: str) -> list:
         if not ts:
             continue
         points.append(pt("body_fat", ts, {"value": bf.get("bodyFatPercentage", 0)}))
-    log.info(f"Fetched body fat: {len(points)} points")
+    log.info("Fetched body fat: %s points", len(points))
     return points
 
 
@@ -165,18 +165,16 @@ def fetch_heart_rate_intraday(token: str) -> list:
     """Measurement: HeartRate_Intraday, fields: value (bpm)"""
     points = []
     try:
-        data = api_get(
-            token, "/users/me/dataTypes/heart-rate/dataPoints?pageSize=10000"
-        )
+        data = api_get(token, "/users/me/dataTypes/heart-rate/dataPoints?pageSize=10000")
         for dp in data.get("dataPoints", []):
             hr = dp.get("heartRate", {})
             ts = parse_time(hr)
             bpm = hr.get("beatsPerMinute")
             if ts and bpm:
                 points.append(pt("HeartRate_Intraday", ts, {"value": int(bpm)}))
-        log.info(f"Fetched heart rate intraday: {len(points)} points")
+        log.info("Fetched heart rate intraday: %s points", len(points))
     except HTTPError as e:
-        log.warning(f"Failed to fetch heart rate: {e.code}")
+        log.warning("Failed to fetch heart rate: %s", e.code)
     return points
 
 
@@ -194,9 +192,7 @@ def fetch_daily_metrics(token: str) -> list:
             "daily-heart-rate-variability",
             "dailyHeartRateVariability",
             "HRV",
-            lambda v: {
-                "dailyRmssd": float(v.get("averageHeartRateVariabilityMilliseconds", 0))
-            },
+            lambda v: {"dailyRmssd": float(v.get("averageHeartRateVariabilityMilliseconds", 0))},
         ),
         (
             "daily-oxygen-saturation",
@@ -213,9 +209,7 @@ def fetch_daily_metrics(token: str) -> list:
     ]
     for api_type, json_key, measurement, extract in metrics:
         try:
-            data = api_get(
-                token, f"/users/me/dataTypes/{api_type}/dataPoints?pageSize=100"
-            )
+            data = api_get(token, f"/users/me/dataTypes/{api_type}/dataPoints?pageSize=100")
             count = 0
             for dp in data.get("dataPoints", []):
                 val = dp.get(json_key, {})
@@ -226,9 +220,9 @@ def fetch_daily_metrics(token: str) -> list:
                 if any(v for v in fields.values()):
                     points.append(pt(measurement, ts, fields))
                     count += 1
-            log.info(f"Fetched {api_type}: {count} points")
+            log.info("Fetched %s: %s points", api_type, count)
         except HTTPError as e:
-            log.warning(f"Failed to fetch {api_type}: {e.code}")
+            log.warning("Failed to fetch %s: %s", api_type, e.code)
     return points
 
 
@@ -251,10 +245,7 @@ def fetch_sleep(token: str) -> list:
                     continue
                 sessions += 1
                 summary = sleep.get("summary", {})
-                stage_summary = {
-                    s["type"].lower(): int(s.get("minutes", 0))
-                    for s in summary.get("stagesSummary", [])
-                }
+                stage_summary = {s["type"].lower(): int(s.get("minutes", 0)) for s in summary.get("stagesSummary", [])}
                 points.append(
                     pt(
                         "Sleep Summary",
@@ -282,11 +273,11 @@ def fetch_sleep(token: str) -> list:
                             )
                         )
             page_token = data.get("nextPageToken")
-            if not page_token or sessions >= 30:
+            if not page_token or sessions >= 30:  # noqa: PLR2004
                 break
-        log.info(f"Fetched sleep: {sessions} sessions")
+        log.info("Fetched sleep: %s sessions", sessions)
     except HTTPError as e:
-        log.warning(f"Failed to fetch sleep: {e.code}")
+        log.warning("Failed to fetch sleep: %s", e.code)
     return points
 
 
@@ -294,18 +285,16 @@ def fetch_spo2_intraday(token: str) -> list:
     """Measurement: SPO2_Intraday, fields: value"""
     points = []
     try:
-        data = api_get(
-            token, "/users/me/dataTypes/oxygen-saturation/dataPoints?pageSize=1000"
-        )
+        data = api_get(token, "/users/me/dataTypes/oxygen-saturation/dataPoints?pageSize=1000")
         for dp in data.get("dataPoints", []):
             o2 = dp.get("oxygenSaturation", {})
             ts = parse_time(o2)
             pct = o2.get("percentage")
             if ts and pct:
                 points.append(pt("SPO2_Intraday", ts, {"value": float(pct)}))
-        log.info(f"Fetched SpO2 intraday: {len(points)} points")
+        log.info("Fetched SpO2 intraday: %s points", len(points))
     except HTTPError as e:
-        log.warning(f"Failed to fetch SpO2 intraday: {e.code}")
+        log.warning("Failed to fetch SpO2 intraday: %s", e.code)
     return points
 
 
@@ -314,9 +303,7 @@ def fetch_daily_rollups(token: str, start: datetime, end: datetime) -> list:
     points = []
     full_body = {"range": {"start": date_to_civil(start), "end": date_to_civil(end)}}
     short_start = max(start, end - timedelta(days=14))
-    short_body = {
-        "range": {"start": date_to_civil(short_start), "end": date_to_civil(end)}
-    }
+    short_body = {"range": {"start": date_to_civil(short_start), "end": date_to_civil(end)}}
 
     rollups = [
         (
@@ -329,32 +316,26 @@ def fetch_daily_rollups(token: str, start: datetime, end: datetime) -> list:
             "distance",
             False,
             "distance",
-            lambda v: {
-                "value": float(v.get("distance", {}).get("millimetersSum", 0)) / 1000
-            },
+            lambda v: {"value": float(v.get("distance", {}).get("millimetersSum", 0)) / 1000},
         ),
         (
             "total-calories",
             True,
             "calories",
-            lambda v: {
-                "value": round(float(v.get("totalCalories", {}).get("kcalSum", 0)), 1)
-            },
+            lambda v: {"value": round(float(v.get("totalCalories", {}).get("kcalSum", 0)), 1)},
         ),
         (
             "active-minutes",
             True,
             "Activity Minutes",
-            lambda v: _parse_active_minutes(v),
+            _parse_active_minutes,
         ),
     ]
 
     for api_type, short_range, measurement, extract in rollups:
         body = short_body if short_range else full_body
         try:
-            data = api_post(
-                token, f"/users/me/dataTypes/{api_type}/dataPoints:dailyRollUp", body
-            )
+            data = api_post(token, f"/users/me/dataTypes/{api_type}/dataPoints:dailyRollUp", body)
             count = 0
             for dp in data.get("rollupDataPoints", []):
                 ts = civil_to_datetime(dp.get("civilStartTime", {}))
@@ -362,9 +343,9 @@ def fetch_daily_rollups(token: str, start: datetime, end: datetime) -> list:
                 if any(v for v in fields.values()):
                     points.append(pt(measurement, ts.isoformat(), fields))
                     count += 1
-            log.info(f"Fetched {api_type} rollup: {count} days")
+            log.info("Fetched %s rollup: %s days", api_type, count)
         except HTTPError as e:
-            log.warning(f"Failed to fetch {api_type} rollup: {e.code}")
+            log.warning("Failed to fetch %s rollup: %s", api_type, e.code)
     return points
 
 
@@ -406,16 +387,16 @@ def fetch_exercises(token: str) -> list:
                     },
                 )
             )
-        log.info(f"Fetched exercises: {len(points)} activities")
+        log.info("Fetched exercises: %s activities", len(points))
     except HTTPError as e:
-        log.warning(f"Failed to fetch exercises: {e.code}")
+        log.warning("Failed to fetch exercises: %s", e.code)
     return points
 
 
 # --- InfluxDB ---
 
 
-def write_to_influx(cfg: dict, points: list):
+def write_to_influx(cfg: dict, points: list) -> None:
     if not points:
         return
     client = InfluxDBClient(
@@ -431,23 +412,17 @@ def write_to_influx(cfg: dict, points: list):
         for k, v in p["fields"].items():
             if v is None:
                 continue
-            fields[k] = (
-                float(v)
-                if isinstance(v, (int, float)) and not isinstance(v, bool)
-                else v
-            )
+            fields[k] = float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else v
         if not fields:
             continue
-        point = (
-            Point(p["measurement"]).tag("Device", cfg["device_name"]).time(p["time"])
-        )
+        point = Point(p["measurement"]).tag("Device", cfg["device_name"]).time(p["time"])
         for k, v in fields.items():
             point = point.field(k, v)
         influx_points.append(point)
 
     if influx_points:
         write_api.write(bucket=cfg["influx_bucket"], record=influx_points)
-        log.info(f"Wrote {len(influx_points)} points to InfluxDB")
+        log.info("Wrote %s points to InfluxDB", len(influx_points))
 
     client.close()
 
@@ -455,9 +430,9 @@ def write_to_influx(cfg: dict, points: list):
 # --- Main loop ---
 
 
-def run_once(cfg: dict):
+def run_once(cfg: dict) -> None:
     token = refresh_access_token(cfg)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     start = now - timedelta(days=cfg["backfill_days"])
 
     all_points = []
@@ -471,10 +446,10 @@ def run_once(cfg: dict):
     all_points.extend(fetch_exercises(token))
 
     write_to_influx(cfg, all_points)
-    log.info(f"Sync complete: {len(all_points)} total points")
+    log.info("Sync complete: %s total points", len(all_points))
 
 
-def main():
+def main() -> None:
     cfg = load_config()
     log.info("Starting google-health-grafana fetcher")
 
@@ -483,7 +458,7 @@ def main():
             run_once(cfg)
         except Exception:
             log.exception("Sync failed")
-        log.info(f"Sleeping {cfg['interval_seconds']}s")
+        log.info("Sleeping %ss", cfg["interval_seconds"])
         time.sleep(cfg["interval_seconds"])
 
 

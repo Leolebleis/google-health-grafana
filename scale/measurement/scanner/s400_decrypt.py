@@ -1,7 +1,12 @@
-from dataclasses import dataclass
 import struct
+from dataclasses import dataclass
 
 from Crypto.Cipher import AES
+
+_DATA_LEN = 24
+_DATA_LEN_WITH_HEADER = 26
+_MIN_DECRYPTED_LEN = 12
+_MAX_HEART_RATE_RAW = 126
 
 
 @dataclass(frozen=True)
@@ -16,9 +21,9 @@ def s400_decrypt(
     mac_bytes: bytes,
     key_bytes: bytes,
 ) -> S400RawData | None:
-    if len(advertisement_data) == 26:
+    if len(advertisement_data) == _DATA_LEN_WITH_HEADER:
         data = advertisement_data[2:]
-    elif len(advertisement_data) == 24:
+    elif len(advertisement_data) == _DATA_LEN:
         data = advertisement_data
     else:
         return None
@@ -39,7 +44,7 @@ def s400_decrypt(
 
 
 def _parse_decrypted(decrypted: bytes) -> S400RawData | None:
-    if len(decrypted) < 12:
+    if len(decrypted) < _MIN_DECRYPTED_LEN:
         return None
 
     obj = decrypted[3:12]
@@ -51,10 +56,8 @@ def _parse_decrypted(decrypted: bytes) -> S400RawData | None:
     impedance_raw = value >> 18
 
     weight_kg = weight_raw / 10.0
-    heart_rate = (heart_rate_raw + 50) if 1 <= heart_rate_raw <= 126 else None
-    impedance = (
-        (impedance_raw / 10.0) if impedance_raw != 0 and weight_raw != 0 else None
-    )
+    heart_rate = (heart_rate_raw + 50) if 1 <= heart_rate_raw <= _MAX_HEART_RATE_RAW else None
+    impedance = (impedance_raw / 10.0) if impedance_raw != 0 and weight_raw != 0 else None
 
     if weight_kg <= 0:
         return None

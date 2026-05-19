@@ -32,7 +32,7 @@ class AppConfig:
 
 
 def load_config(path: Path = Path("config.yaml")) -> AppConfig:
-    with open(path) as f:
+    with path.open() as f:
         raw = yaml.safe_load(f)
 
     sc = raw["scale"]

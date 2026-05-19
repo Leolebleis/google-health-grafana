@@ -5,7 +5,7 @@ influxdb/
 influxdb2/
 .superpowers/
 scale/config.yaml
-scale/.venv/
+.venv/
 __pycache__/
 *.pyc
 .pytest_cache/
