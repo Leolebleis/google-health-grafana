@@ -11,7 +11,6 @@ from scale.measurement.model.user_profile import UserProfile
 class ScaleConfig:
     mac: str
     bind_key: str
-    scan_timeout: int
 
 
 @dataclass(frozen=True)
@@ -44,7 +43,6 @@ def load_config(path: Path = Path("config.yaml")) -> AppConfig:
         scale=ScaleConfig(
             mac=sc["mac"],
             bind_key=sc["bindkey"],
-            scan_timeout=sc.get("scan_timeout", 300),
         ),
         user=UserProfile(
             name=usr["name"],

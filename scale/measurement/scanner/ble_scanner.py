@@ -16,7 +16,8 @@ log = logging.getLogger(__name__)
 class BleScaleScanner:
     def __init__(self, mac_address: str, bind_key: str):
         self._mac = mac_address.upper()
-        self._bind_key = bind_key
+        self._mac_bytes = bytes.fromhex(mac_address.replace(":", ""))
+        self._key_bytes = bytes.fromhex(bind_key)
 
     async def scan(self) -> AsyncIterator[Measurement]:
         queue: asyncio.Queue[Measurement] = asyncio.Queue()
@@ -26,7 +27,7 @@ class BleScaleScanner:
                 return
 
             for uuid, data in adv.service_data.items():
-                raw = s400_decrypt(data, self._mac, self._bind_key)
+                raw = s400_decrypt(data, self._mac_bytes, self._key_bytes)
                 if raw is None:
                     continue
 

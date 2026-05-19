@@ -13,26 +13,14 @@ class S400RawData:
 
 def s400_decrypt(
     advertisement_data: bytes,
-    mac_address: str,
-    bind_key: str,
+    mac_bytes: bytes,
+    key_bytes: bytes,
 ) -> S400RawData | None:
-    if len(bind_key) != 32:
-        return None
-
     if len(advertisement_data) == 26:
         data = advertisement_data[2:]
     elif len(advertisement_data) == 24:
         data = advertisement_data
     else:
-        return None
-
-    try:
-        mac_bytes = bytes.fromhex(mac_address.replace(":", ""))
-        key_bytes = bytes.fromhex(bind_key)
-    except ValueError:
-        return None
-
-    if len(mac_bytes) != 6 or len(key_bytes) != 16:
         return None
 
     nonce = mac_bytes[::-1] + data[2:5] + data[-7:-4]

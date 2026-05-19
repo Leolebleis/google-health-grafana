@@ -1,20 +1,21 @@
 from scale.measurement.scanner.s400_decrypt import s400_decrypt
 
 
-MAC = "84:46:93:64:A5:E6"
-BIND_KEY = "58305740b64e4b425e518aa1f4e51339"
+MAC_BYTES = bytes.fromhex("84469364A5E6")
+KEY_BYTES = bytes.fromhex("58305740b64e4b425e518aa1f4e51339")
+WRONG_KEY = bytes.fromhex("00000000000000000000000000000000")
 
 
 def test_decrypt_24_byte_payload():
     data = bytes.fromhex("4859d53b2d3314943c58b133638c7457a4000000c3e670dc")
-    result = s400_decrypt(data, MAC, BIND_KEY)
+    result = s400_decrypt(data, MAC_BYTES, KEY_BYTES)
     assert result is not None
     assert abs(result.weight_kg - 74.2) < 0.1
 
 
 def test_decrypt_26_byte_payload():
     data = bytes.fromhex("95FE4859D53B3BDE6BC8D05B51C0CDFD9021C9000000925C5039")
-    result = s400_decrypt(data, MAC, BIND_KEY)
+    result = s400_decrypt(data, MAC_BYTES, KEY_BYTES)
     assert result is not None
     assert abs(result.weight_kg - 73.2) < 0.1
 
@@ -50,24 +51,18 @@ def test_decrypt_26_byte_payload_variant():
             196,
         ]
     )
-    result = s400_decrypt(data, MAC, BIND_KEY)
+    result = s400_decrypt(data, MAC_BYTES, KEY_BYTES)
     assert result is not None
     assert abs(result.weight_kg - 73.3) < 0.1
 
 
 def test_invalid_data_length_returns_none():
     data = bytes(11)
-    result = s400_decrypt(data, MAC, BIND_KEY)
+    result = s400_decrypt(data, MAC_BYTES, KEY_BYTES)
     assert result is None
 
 
 def test_wrong_bind_key_returns_none():
     data = bytes.fromhex("4859d53b2d3314943c58b133638c7457a4000000c3e670dc")
-    result = s400_decrypt(data, MAC, "00000000000000000000000000000000")
-    assert result is None
-
-
-def test_invalid_bind_key_length_returns_none():
-    data = bytes.fromhex("4859d53b2d3314943c58b133638c7457a4000000c3e670dc")
-    result = s400_decrypt(data, MAC, "short")
+    result = s400_decrypt(data, MAC_BYTES, WRONG_KEY)
     assert result is None

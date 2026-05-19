@@ -1,7 +1,6 @@
 scale:
   mac: "XX:XX:XX:XX:XX:XX"
   bindkey: "your-32-char-hex-bindkey-here..."
-  scan_timeout: 300
 
 user:
   name: leo

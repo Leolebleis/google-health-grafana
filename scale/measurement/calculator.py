@@ -21,12 +21,10 @@ def calculate_body_composition(
     bmi = weight / ((height / 100) ** 2)
 
     if impedance is not None and impedance > 0:
-        body_fat_pct = _body_fat(weight, height, age, is_male, impedance)
+        lbm_coeff = _lbm_coefficient(weight, height, age, impedance)
+        body_fat_pct = _body_fat(weight, height, age, is_male, lbm_coeff)
         water_pct = _water(body_fat_pct)
-        bone_mass = _bone_mass(weight, height, age, is_male, impedance)
-        lbm = weight - (body_fat_pct * 0.01 * weight) - bone_mass
-        if (is_male and weight >= 93.5) or (not is_male and weight >= 84):
-            lbm = min(lbm, 120.0)
+        bone_mass = _bone_mass(is_male, lbm_coeff)
         muscle_pct = _muscle_pct(height, age, is_male, impedance, weight)
         muscle_mass = muscle_pct / 100.0 * weight
         protein_pct = _protein(muscle_pct, water_pct)
@@ -76,8 +74,7 @@ def _lbm_coefficient(weight, height, age, impedance):
     )
 
 
-def _body_fat(weight, height, age, is_male, impedance):
-    lbm_coeff = _lbm_coefficient(weight, height, age, impedance)
+def _body_fat(weight, height, age, is_male, lbm_coeff):
     if not is_male and age <= 49:
         lbm_sub = 9.25
     elif not is_male:
@@ -108,8 +105,7 @@ def _water(body_fat_pct):
     return raw * coeff
 
 
-def _bone_mass(weight, height, age, is_male, impedance):
-    lbm_coeff = _lbm_coefficient(weight, height, age, impedance)
+def _bone_mass(is_male, lbm_coeff):
     base = 0.18016894 if is_male else 0.245691014
     bone = (base - lbm_coeff * 0.05158) * -1
 
@@ -138,9 +134,7 @@ def _muscle_pct(height, age, is_male, impedance, weight):
         )
         pct = (smm / weight) * 100
         return max(10.0, min(pct, 60.0))
-    ratio = 0.52 if is_male else 0.46
-    lbm = weight * ratio
-    return (lbm / weight) * 100
+    return 52.0 if is_male else 46.0
 
 
 def _protein(muscle_pct, water_pct):
@@ -176,7 +170,7 @@ def _bmr(weight, height, age, is_male):
 def _metabolic_age(bmr, age):
     if bmr <= 0:
         return age
-    base_bmr = 20.0 * bmr / (10 * 70 + 6.25 * 170 - 5 * 20 + 5)
+    base_bmr = 20.0 * bmr / _bmr(70, 170, 20, True)
     estimated = max(15, min(80, int(round(base_bmr))))
     return estimated
 
