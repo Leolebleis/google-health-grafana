@@ -27,10 +27,10 @@
         "options": {"graphMode": "none", "textMode": "value_and_name", "reduceOptions": {"calcs": ["lastNotNull"]}},
         "targets": [
           {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
-           "query": "SELECT last(\"value\") FROM \"weight\"", "alias": "Current",
+           "query": "SELECT last(\"weight\") FROM \"body_composition\"", "alias": "Current",
            "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}},
           {"refId": "B", "rawQuery": true, "resultFormat": "time_series",
-           "query": "SELECT last(\"value\") - 82 FROM \"weight\"", "alias": "To Goal",
+           "query": "SELECT last(\"weight\") - 82 FROM \"body_composition\"", "alias": "To Goal",
            "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
         ]
       },
@@ -53,7 +53,7 @@
         },
         "targets": [
           {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
-           "query": "SELECT mean(\"value\") FROM \"weight\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Weight",
+           "query": "SELECT mean(\"weight\") FROM \"body_composition\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Weight",
            "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
         ]
       },
@@ -177,7 +177,7 @@
         "gridPos": {"h": 7, "w": 8, "x": 0, "y": 29},
         "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
         "fieldConfig": {"defaults": {"unit": "percent", "color": {"mode": "fixed", "fixedColor": "orange"}, "custom": {"lineWidth": 2, "pointSize": 5, "showPoints": "always", "spanNulls": true, "fillOpacity": 5}}},
-        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT mean(\"value\") FROM \"body_fat\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Body Fat %", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}]
+        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT mean(\"body_fat_pct\") FROM \"body_composition\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Body Fat %", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}]
       },
       {
         "id": 41, "title": "Breathing Rate", "type": "timeseries",
