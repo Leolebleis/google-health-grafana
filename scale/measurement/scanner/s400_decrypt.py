@@ -8,6 +8,9 @@ _DATA_LEN_WITH_HEADER = 26
 _MIN_DECRYPTED_LEN = 12
 _MAX_HEART_RATE_RAW = 126
 
+# Frame sizes that carry a measurement -- anything else is an idle beacon.
+MEASUREMENT_FRAME_LENGTHS = (_DATA_LEN, _DATA_LEN_WITH_HEADER)
+
 
 @dataclass(frozen=True)
 class S400RawData:

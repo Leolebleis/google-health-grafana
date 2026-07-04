@@ -11,27 +11,31 @@ def to_influx_point(
     user: str,
     measurement_name: str = "body_composition",
 ) -> Point:
-    point = (
-        Point(measurement_name)
-        .tag("user", user)
-        .time(timestamp)
-        .field("weight", bc.weight_kg)
-        .field("bmi", bc.bmi)
-        .field("body_fat_pct", bc.body_fat_pct)
-        .field("water_pct", bc.water_pct)
-        .field("muscle_mass", bc.muscle_mass_kg)
-        .field("bone_mass", bc.bone_mass_kg)
-        .field("protein_pct", bc.protein_pct)
-        .field("visceral_fat", bc.visceral_fat)
-        .field("bmr", bc.bmr_kcal)
-        .field("metabolic_age", int(bc.metabolic_age))
-        .field("ideal_weight", bc.ideal_weight_kg)
-        .field("body_type", int(bc.body_type))
-    )
+    point = Point(measurement_name).tag("user", user).time(timestamp).field("weight", bc.weight_kg)
 
-    if bc.heart_rate is not None:
-        point = point.field("heart_rate", int(bc.heart_rate))
-    if bc.impedance is not None:
-        point = point.field("impedance", bc.impedance)
+    float_fields = {
+        "bmi": bc.bmi,
+        "body_fat_pct": bc.body_fat_pct,
+        "water_pct": bc.water_pct,
+        "muscle_mass": bc.muscle_mass_kg,
+        "bone_mass": bc.bone_mass_kg,
+        "protein_pct": bc.protein_pct,
+        "visceral_fat": bc.visceral_fat,
+        "bmr": bc.bmr_kcal,
+        "ideal_weight": bc.ideal_weight_kg,
+        "impedance": bc.impedance,
+    }
+    int_fields = {
+        "metabolic_age": bc.metabolic_age,
+        "body_type": bc.body_type,
+        "heart_rate": bc.heart_rate,
+    }
+
+    for name, value in float_fields.items():
+        if value is not None:
+            point = point.field(name, value)
+    for name, int_value in int_fields.items():
+        if int_value is not None:
+            point = point.field(name, int(int_value))
 
     return point

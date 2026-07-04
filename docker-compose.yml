@@ -14,6 +14,7 @@ services:
       - INFLUXDB_DATABASE=${INFLUXDB_DATABASE:-health}
       - DEVICE_NAME=${DEVICE_NAME:-Pixel Watch}
       - BACKFILL_DAYS=${BACKFILL_DAYS:-30}
+      - INCREMENTAL_WINDOW_DAYS=${INCREMENTAL_WINDOW_DAYS:-2}
       - INTERVAL_SECONDS=${INTERVAL_SECONDS:-300}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     depends_on:
@@ -33,6 +34,10 @@ services:
       --exec-mem-pool-bytes=536870912
       --datafusion-num-threads=2
       --disable-telemetry-upload
+      --query-file-limit=10000
       --without-auth
+    # query-file-limit: Core has no compaction, so parquet files accumulate
+    # (~100/day per hot table) and multi-day queries exceed the default 432.
+    # fetch.py's incremental window slows the growth; this raises the ceiling.
     volumes:
       - ./influxdb3:/var/lib/influxdb3/data

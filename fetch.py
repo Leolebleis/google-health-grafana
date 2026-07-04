@@ -39,6 +39,11 @@ def load_config() -> dict:
         "influx_database": os.environ.get("INFLUXDB_DATABASE", "health"),
         "device_name": os.environ.get("DEVICE_NAME", "Pixel Watch"),
         "backfill_days": int(os.environ.get("BACKFILL_DAYS", "7")),
+        # After the first full-backfill sync, only fetch/write points from the
+        # last N days. Rewriting the full history every cycle explodes InfluxDB
+        # 3 Core's parquet file count (no compaction) until queries hit the
+        # file limit (see --query-file-limit in docker-compose.yml).
+        "incremental_window_days": int(os.environ.get("INCREMENTAL_WINDOW_DAYS", "2")),
         "interval_seconds": int(os.environ.get("INTERVAL_SECONDS", "300")),
     }
 
@@ -427,10 +432,28 @@ def write_to_influx(cfg: dict, points: list) -> None:
 # --- Main loop ---
 
 
-def run_once(cfg: dict) -> None:
+def _parse_point_time(val: object) -> datetime | None:
+    try:
+        ts = datetime.fromisoformat(str(val).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return ts if ts.tzinfo else ts.replace(tzinfo=UTC)
+
+
+def _filter_window(points: list, cutoff: datetime) -> list:
+    """Drop points older than cutoff; keep points with unparseable timestamps."""
+    kept = []
+    for p in points:
+        ts = _parse_point_time(p["time"])
+        if ts is None or ts >= cutoff:
+            kept.append(p)
+    return kept
+
+
+def run_once(cfg: dict, window_days: int) -> None:
     token = refresh_access_token(cfg)
     now = datetime.now(UTC)
-    start = now - timedelta(days=cfg["backfill_days"])
+    start = now - timedelta(days=window_days)
 
     all_points = []
     all_points.extend(fetch_weight(token))
@@ -442,17 +465,20 @@ def run_once(cfg: dict) -> None:
     all_points.extend(fetch_daily_rollups(token, start, now))
     all_points.extend(fetch_exercises(token))
 
-    write_to_influx(cfg, all_points)
-    log.info("Sync complete: %s total points", len(all_points))
+    points = _filter_window(all_points, now - timedelta(days=window_days))
+    write_to_influx(cfg, points)
+    log.info("Sync complete: wrote %s points (%s fetched, window=%sd)", len(points), len(all_points), window_days)
 
 
 def main() -> None:
     cfg = load_config()
     log.info("Starting google-health-grafana fetcher")
 
+    window_days = cfg["backfill_days"]
     while True:
         try:
-            run_once(cfg)
+            run_once(cfg, window_days)
+            window_days = min(cfg["backfill_days"], cfg["incremental_window_days"])
         except Exception:
             log.exception("Sync failed")
         log.info("Sleeping %ss", cfg["interval_seconds"])

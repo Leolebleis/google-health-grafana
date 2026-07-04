@@ -30,3 +30,30 @@ def test_maps_all_fields():
     assert "weight=80" in line
     assert "heart_rate=72i" in line
     assert "body_type=5i" in line
+
+
+def test_skips_unmeasured_fields():
+    bc = BodyComposition(
+        weight_kg=94.1,
+        bmi=29.7,
+        body_fat_pct=None,
+        water_pct=None,
+        muscle_mass_kg=None,
+        bone_mass_kg=None,
+        protein_pct=None,
+        visceral_fat=None,
+        bmr_kcal=None,
+        metabolic_age=None,
+        ideal_weight_kg=None,
+        body_type=None,
+        heart_rate=None,
+        impedance=None,
+    )
+    ts = datetime(2026, 5, 19, 9, 17, 12, tzinfo=UTC)
+    line = to_influx_point(bc, ts, user="leo").to_line_protocol()
+
+    assert "weight=94.1" in line
+    assert "bmi=29.7" in line
+    assert "body_fat_pct" not in line
+    assert "heart_rate" not in line
+    assert "metabolic_age" not in line

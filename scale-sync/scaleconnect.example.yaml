@@ -1,0 +1,7 @@
+# SmartScaleConnect config -- copy to scaleconnect.yaml (gitignored) and fill in.
+# xiaomihome needs region AND scale model: EU S400 = yunmai.scales.ms104,
+# CN S400 = yunmai.scales.ms103. Region: de = Europe/UK servers.
+sync_s400:
+  from: xiaomihome your@email.com your-password de yunmai.scales.ms104
+  # filename must match OUTPUT_FILE in scale/cloud_sync.py
+  to: json scale.json
