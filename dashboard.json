@@ -89,13 +89,13 @@
         "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
         "targets": [
           {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
-           "query": "SELECT count(\"duration\") FROM \"Activity Records\" WHERE time > now() - 7d GROUP BY time(1d) fill(0)",
+           "query": "SELECT count(\"duration\") FROM \"Activity Records\" WHERE \"activityName\" = 'WEIGHTLIFTING' AND time > now() - 7d GROUP BY time(1d) fill(0)",
            "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
         ],
         "options": {
           "SVGBaseFix": true, "add100Percentage": true, "centerAlignContent": true, "overflow": "visible",
           "html": "<div id=\"ex\"></div>",
-          "onRender": "const days=['M','T','W','T','F','S','S'];const c=htmlNode.querySelector('#ex');if(!c)return;let ad=new Set();try{const f=customProperties?.data||[];if(f.length>0&&f[0].fields){const tf=f[0].fields.find(x=>x.name==='Time');const vf=f[0].fields.find(x=>x.name!=='Time');if(tf&&vf){for(let i=0;i<tf.values.length;i++){if(vf.values[i]>0){const d=new Date(tf.values[i]);ad.add(d.getDay())}}}}}catch(e){}const dm=[1,2,3,4,5,6,0];let h='<div style=\"display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px\">';h+='<div style=\"display:flex;gap:8px\">';for(let i=0;i<7;i++){const a=ad.has(dm[i]);const bg=a?'#69db7c':'#3a3a5a';const fg=a?'#1a1a2e':'#666';h+=`<div style=\"width:30px;height:30px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:${fg}\">${days[i]}</div>`}h+='</div>';h+=`<div style=\"text-align:center\"><span style=\"font-size:28px;font-weight:bold;color:#69db7c\">${ad.size}</span><span style=\"font-size:16px;color:#888\"> / 7</span><div style=\"color:#888;font-size:12px;margin-top:2px\">days active</div></div>`;h+='</div>';c.innerHTML=h;"
+          "onRender": "const days=['M','T','W','T','F','S','S'];const c=htmlNode.querySelector('#ex');if(!c)return;let ad=new Set();try{const f=data?.series||[];if(f.length>0&&f[0].fields){const tf=f[0].fields.find(x=>x.name==='Time');const vf=f[0].fields.find(x=>x.name!=='Time');if(tf&&vf){for(let i=0;i<tf.values.length;i++){if(vf.values[i]>0){const d=new Date(tf.values[i]);ad.add(d.getDay())}}}}}catch(e){}const dm=[1,2,3,4,5,6,0];let h='<div style=\"display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px\">';h+='<div style=\"display:flex;gap:8px\">';for(let i=0;i<7;i++){const a=ad.has(dm[i]);const bg=a?'#69db7c':'#3a3a5a';const fg=a?'#1a1a2e':'#666';h+=`<div style=\"width:30px;height:30px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:${fg}\">${days[i]}</div>`}h+='</div>';h+=`<div style=\"text-align:center\"><span style=\"font-size:28px;font-weight:bold;color:#69db7c\">${ad.size}</span><span style=\"font-size:16px;color:#888\"> / 7</span><div style=\"color:#888;font-size:12px;margin-top:2px\">days active</div></div>`;h+='</div>';c.innerHTML=h;"
         }
       },
       {
@@ -177,7 +177,7 @@
         "gridPos": {"h": 7, "w": 8, "x": 0, "y": 29},
         "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
         "fieldConfig": {"defaults": {"unit": "percent", "color": {"mode": "fixed", "fixedColor": "orange"}, "custom": {"lineWidth": 2, "pointSize": 5, "showPoints": "always", "spanNulls": true, "fillOpacity": 5}}},
-        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT mean(\"body_fat_pct\") FROM \"body_composition\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Body Fat %", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}]
+        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT mean(\"body_fat_pct\") FROM \"body_composition\" WHERE $timeFilter AND \"body_fat_pct\" > 0 GROUP BY time(1d) fill(none)", "alias": "Body Fat %", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}]
       },
       {
         "id": 41, "title": "Breathing Rate", "type": "timeseries",

@@ -8,7 +8,7 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
 from scale.measurement.model.measurement import Measurement
-from scale.measurement.scanner.s400_decrypt import s400_decrypt
+from scale.measurement.scanner.s400_decrypt import MEASUREMENT_FRAME_LENGTHS, s400_decrypt
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +29,12 @@ class BleScaleScanner:
             for data in adv.service_data.values():
                 raw = s400_decrypt(data, self._mac_bytes, self._key_bytes)
                 if raw is None:
+                    if len(data) in MEASUREMENT_FRAME_LENGTHS:
+                        log.warning(
+                            "Measurement-sized frame failed decrypt (len=%d, rssi=%s)",
+                            len(data),
+                            adv.rssi,
+                        )
                     continue
 
                 measurement = Measurement(

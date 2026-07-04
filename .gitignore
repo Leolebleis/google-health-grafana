@@ -6,6 +6,8 @@ influxdb3/
 influxdb3-token
 .superpowers/
 scale/config.yaml
+scale-sync/*
+!scale-sync/scaleconnect.example.yaml
 .venv/
 __pycache__/
 *.pyc

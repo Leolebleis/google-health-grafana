@@ -30,9 +30,12 @@ def scanner() -> BleScaleScanner:
     return BleScaleScanner(mac_address=_MAC, bind_key=_BIND_KEY)
 
 
-@patch("scale.measurement.scanner.ble_scanner.BleakScanner")
-async def test_scan_yields_measurement_for_matching_mac(mock_bleak_cls: MagicMock, scanner: BleScaleScanner) -> None:
-    """A valid advertisement from the target MAC is yielded as a Measurement."""
+async def _start_scan(mock_bleak_cls: MagicMock, scanner: BleScaleScanner) -> tuple:
+    """Start scanner.scan() against a mocked BleakScanner.
+
+    Returns (mock_bleak, detection_callback, generator, first-yield task) with
+    the generator parked on `await queue.get()`.
+    """
     mock_bleak = AsyncMock()
     captured: dict = {}
 
@@ -43,25 +46,32 @@ async def test_scan_yields_measurement_for_matching_mac(mock_bleak_cls: MagicMoc
     mock_bleak_cls.side_effect = _capture_scanner
 
     gen = scanner.scan()
-
-    # Start the generator up to the first `await scanner.start()` call
-    # by scheduling a task and letting the event loop tick.
     task = asyncio.ensure_future(gen.__anext__())
-
     # Give the event loop a chance to run up to `await queue.get()`
     await asyncio.sleep(0)
+    return mock_bleak, captured["cb"], gen, task
 
-    # Fire the advertisement callback with the real MAC and valid payload
-    cb = captured["cb"]
-    assert cb is not None
+
+async def _assert_nothing_yielded(task, gen):
+    assert not task.done()
+    task.cancel()
+    with pytest.raises((asyncio.CancelledError, StopAsyncIteration)):
+        await task
+    await gen.aclose()
+
+
+@patch("scale.measurement.scanner.ble_scanner.BleakScanner")
+async def test_scan_yields_measurement_for_matching_mac(mock_bleak_cls: MagicMock, scanner: BleScaleScanner) -> None:
+    """A valid advertisement from the target MAC is yielded as a Measurement."""
+    mock_bleak, cb, gen, task = await _start_scan(mock_bleak_cls, scanner)
+
     cb(_make_device(_MAC), _make_adv({"0000181b-0000-1000-8000-00805f9b34fb": _VALID_PAYLOAD}))
 
-    # Now the queue has an item; the task should complete
     measurement = await task
     assert measurement is not None
     assert abs(measurement.weight_kg - 74.2) < 0.1
 
-    # Clean up -- cancel the generator so `finally` runs (stops scanner)
+    # Clean up -- close the generator so `finally` runs (stops scanner)
     await gen.aclose()
     mock_bleak.stop.assert_awaited()
 
@@ -69,57 +79,34 @@ async def test_scan_yields_measurement_for_matching_mac(mock_bleak_cls: MagicMoc
 @patch("scale.measurement.scanner.ble_scanner.BleakScanner")
 async def test_scan_ignores_non_matching_mac(mock_bleak_cls: MagicMock, scanner: BleScaleScanner) -> None:
     """An advertisement from a different MAC address is silently ignored."""
-    mock_bleak = AsyncMock()
-    captured: dict = {}
+    _, cb, gen, task = await _start_scan(mock_bleak_cls, scanner)
 
-    def _capture_scanner(**kwargs: object) -> AsyncMock:
-        captured["cb"] = kwargs.get("detection_callback")
-        return mock_bleak
-
-    mock_bleak_cls.side_effect = _capture_scanner
-
-    gen = scanner.scan()
-    task = asyncio.ensure_future(gen.__anext__())
-    await asyncio.sleep(0)
-
-    cb = captured["cb"]
-    # Fire with the WRONG MAC -- should be ignored, queue stays empty
     cb(_make_device(_OTHER_MAC), _make_adv({"svc": _VALID_PAYLOAD}))
 
-    # Task should still be pending (queue is empty)
-    assert not task.done()
+    await _assert_nothing_yielded(task, gen)
 
-    task.cancel()
-    with pytest.raises((asyncio.CancelledError, StopAsyncIteration)):
-        await task
 
-    await gen.aclose()
+@patch("scale.measurement.scanner.ble_scanner.BleakScanner")
+async def test_scan_warns_on_measurement_sized_frame_that_fails_decrypt(
+    mock_bleak_cls: MagicMock, scanner: BleScaleScanner, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A 24-byte frame that fails decryption logs a warning instead of failing silently."""
+    _, cb, gen, task = await _start_scan(mock_bleak_cls, scanner)
+
+    # 24-byte garbage payload -- measurement-sized, but MIC check fails
+    with caplog.at_level("WARNING"):
+        cb(_make_device(_MAC), _make_adv({"svc": bytes(24)}))
+
+    assert "failed decrypt" in caplog.text
+    await _assert_nothing_yielded(task, gen)
 
 
 @patch("scale.measurement.scanner.ble_scanner.BleakScanner")
 async def test_scan_skips_undecryptable_payload(mock_bleak_cls: MagicMock, scanner: BleScaleScanner) -> None:
     """A payload that fails decryption (wrong length) does not enqueue a measurement."""
-    mock_bleak = AsyncMock()
-    captured: dict = {}
+    _, cb, gen, task = await _start_scan(mock_bleak_cls, scanner)
 
-    def _capture_scanner(**kwargs: object) -> AsyncMock:
-        captured["cb"] = kwargs.get("detection_callback")
-        return mock_bleak
-
-    mock_bleak_cls.side_effect = _capture_scanner
-
-    gen = scanner.scan()
-    task = asyncio.ensure_future(gen.__anext__())
-    await asyncio.sleep(0)
-
-    cb = captured["cb"]
     # 11-byte payload -- s400_decrypt returns None for invalid lengths
     cb(_make_device(_MAC), _make_adv({"svc": bytes(11)}))
 
-    assert not task.done()
-
-    task.cancel()
-    with pytest.raises((asyncio.CancelledError, StopAsyncIteration)):
-        await task
-
-    await gen.aclose()
+    await _assert_nothing_yielded(task, gen)
