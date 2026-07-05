@@ -414,11 +414,18 @@ def _protein_grams(nutrition_log: dict) -> float:
 def _nutrition_daily_totals(raw_points: list) -> dict:
     """Collapse nutrition-log entries into daily totals.
 
-    MFP data arrives as per-item rows and/or per-meal aggregate rows (empty
-    name or "... Summary") describing the same food -- per meal, prefer one
-    aggregate row when present, otherwise sum the item rows.
+    MFP sends each meal as a summary row (blank or "... Summary" food name,
+    tagged with its mealType) plus the individual food-item rows. The summary
+    rows are the authoritative meal totals; the item rows are their expansion
+    and are NOT reliably summable -- items can be duplicated and can carry a
+    different mealType than their summary (e.g. a SNACK summary whose items are
+    tagged ANYTIME). Matching summaries to items by mealType therefore
+    double-counts, so we never do it: if a day has any summary rows, the daily
+    total is the sum of one summary per mealType; only a day with no summary
+    rows at all falls back to summing its item rows.
     """
-    meals: dict = {}
+    summaries: dict = {}  # (day, mealType) -> entry, one summary per meal
+    items: dict = {}  # day -> list[entry]
     for dp in raw_points:
         n = dp.get("nutritionLog", {})
         date_dict = n.get("interval", {}).get("civilStartTime", {}).get("date")
@@ -432,17 +439,25 @@ def _nutrition_daily_totals(raw_points: list) -> dict:
             "carbs": float(n.get("totalCarbohydrate", {}).get("grams", 0)),
             "fat": float(n.get("totalFat", {}).get("grams", 0)),
         }
-        bucket = meals.setdefault((day, n.get("mealType", "UNKNOWN")), {"aggregates": [], "items": []})
-        kind = "aggregates" if (not name or name.endswith("Summary")) else "items"
-        bucket[kind].append(entry)
+        if not name or name.endswith("Summary"):
+            summaries.setdefault((day, n.get("mealType", "UNKNOWN")), entry)
+        else:
+            items.setdefault(day, []).append(entry)
 
     days: dict = {}
-    for (day, _meal), bucket in meals.items():
-        rows = bucket["aggregates"][:1] if bucket["aggregates"] else bucket["items"]
+
+    def add(day: datetime, entry: dict) -> None:
         totals = days.setdefault(day, {"caloriesIn": 0.0, "protein": 0.0, "carbs": 0.0, "fat": 0.0})
-        for entry in rows:
-            for k in totals:
-                totals[k] = round(totals[k] + entry[k], 1)
+        for k in totals:
+            totals[k] = round(totals[k] + entry[k], 1)
+
+    summarized_days = {day for (day, _meal) in summaries}
+    for (day, _meal), entry in summaries.items():
+        add(day, entry)
+    for day, entries in items.items():
+        if day not in summarized_days:
+            for entry in entries:
+                add(day, entry)
     return days
 
 
