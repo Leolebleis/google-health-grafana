@@ -903,7 +903,7 @@ Expected: image rebuilds (now includes `COPY nutrition/`), container recreated.
 ```bash
 ssh pi 'sleep 45; docker logs health-fetch 2>&1 | grep -E "Calorie target|calorie-target" | tail -3'
 ```
-Expected: a `Calorie target: None kcal (bootstrapping, 0 logged days, N weigh-ins)` line — with current data (intake history only starts today and today is excluded; no prior `ok` point) **bootstrapping is the correct result**. The first-run `calorie-target query failed` warning for the not-yet-existing `calorie_target` table is expected once. Then:
+Expected: a `Calorie target: None kcal (bootstrapping, 0 logged days, N weigh-ins)` line — with current data (intake history only starts today and today is excluded; no prior `ok` point) **bootstrapping is the correct result**. A debug-level `calorie-target query failed` message recurs each cycle until the first `ok` point exists (the last-good query references columns bootstrapping points don't write) — expected, self-heals. Then:
 
 ```bash
 ssh pi 'curl -s -G "http://localhost:8181/query" --data-urlencode "db=health" --data-urlencode "q=SELECT * FROM \"calorie_target\" WHERE time >= now() - 1d"'

@@ -532,7 +532,7 @@ def _influx_rows(client, sql: str) -> list:
     try:
         return client.query(sql).to_pylist()
     except Exception as e:  # table may not exist yet (first run)
-        log.warning("calorie-target query failed: %s", e)
+        log.debug("calorie-target query failed (expected until first ok point): %s", e)
         return []
 
 
@@ -554,6 +554,7 @@ def update_calorie_target(cfg: dict) -> None:
         database=cfg["influx_database"],
     )
     try:
+        # '22 days' = TargetConfig.window_days (21) + 1-day boundary buffer -- keep in sync
         intake_rows = _influx_rows(
             client, "SELECT time, \"caloriesIn\" FROM \"Nutrition\" WHERE time >= now() - interval '22 days'"
         )
