@@ -1097,7 +1097,7 @@
         "description": "Plan target: 170-205 g/day.",
         "gridPos": {
           "h": 8,
-          "w": 20,
+          "w": 12,
           "x": 4,
           "y": 8
         },
@@ -1151,6 +1151,93 @@
               "uid": "P9A8567EC67EE4A5C"
             },
             "query": "SELECT max(\"protein\") FROM \"Nutrition\" WHERE $timeFilter GROUP BY time(1d) fill(0)"
+          }
+        ]
+      },
+      {
+        "id": 53,
+        "title": "Burn Split",
+        "type": "timeseries",
+        "description": "Daily energy expenditure: baseline (BMR + passive) vs active burn.",
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 16,
+          "y": 8
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "kcal",
+            "decimals": 0,
+            "custom": {
+              "drawStyle": "bars",
+              "stacking": {
+                "mode": "normal"
+              },
+              "fillOpacity": 55,
+              "lineWidth": 0,
+              "barMaxWidth": 20
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Baseline"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "dark-blue"
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Active"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "orange"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "Baseline",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT max(\"value\") - max(\"active\") FROM \"calories\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
+          },
+          {
+            "refId": "B",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "Active",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT max(\"active\") FROM \"calories\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
           }
         ]
       }
