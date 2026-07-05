@@ -70,12 +70,30 @@ Runtime config in `scale/config.yaml` (gitignored -- copy
 - Grafana dashboards: `dashboard.json` (Health), `scale-dashboard.json`,
   `training-dashboard.json` (Hevy data). Deploy via
   `POST /api/dashboards/db` as admin on the grafana container (mediastack).
+- Grafana runs in the mediastack compose with no host port -- reach it at the
+  container's pi-net IP (`docker inspect grafana`); anonymous read is on,
+  admin creds are Pi-local (ask). The InfluxDB datasource is **provisioned**
+  from `mediastack/config/grafana/provisioning/datasources/influxdb.yml`:
+  UI edits revert on every container restart -- fix the file, not the UI.
+  French date formats come from `GF_DATE_FORMATS_*` env on that container.
+- InfluxQL via the v1 `/query` endpoint: always double-quote identifiers
+  (unquoted ones are lowercased), always time-bound queries (full-table scans
+  can exceed the parquet query-file-limit), subqueries + `moving_average`
+  work, `exponential_moving_average` doesn't.
+- To probe the Google Health API with the fetcher's own OAuth token:
+  `docker exec -i health-fetch python - <<'PY'` (env has client id/secret +
+  TOKEN_PATH; `-i` is required or stdin is empty). The token already carries
+  the nutrition scope.
 
 ## Deployment (Raspberry Pi)
 
 Checkout: `/home/leo/documents/code/raspberrypi/google-health-grafana` (`ssh pi`).
 `uv` lives at `~/.local/bin/uv` on the Pi -- not on PATH in non-interactive
 `ssh pi "..."` commands.
+
+`main` is protected -- ship via branch + PR (`gh pr create` / `gh pr merge`).
+If files were scp'd to the Pi during development, restore/remove them before
+`git pull` (Windows scp leaves CRLF copies that block the merge).
 
 ```bash
 # Fetcher + InfluxDB (Docker)
