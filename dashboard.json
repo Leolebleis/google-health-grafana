@@ -129,7 +129,32 @@
                 }
               ]
             }
-          }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Trend (7d)"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "light-blue"
+                  }
+                },
+                {
+                  "id": "custom.lineWidth",
+                  "value": 3
+                },
+                {
+                  "id": "custom.showPoints",
+                  "value": "never"
+                }
+              ]
+            }
+          ]
         },
         "targets": [
           {
@@ -142,6 +167,17 @@
               "type": "influxdb",
               "uid": "P9A8567EC67EE4A5C"
             }
+          },
+          {
+            "refId": "B",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "Trend (7d)",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT moving_average(mean(\"weight\"), 7) FROM \"body_composition\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
           }
         ]
       },
@@ -1209,6 +1245,272 @@
               "uid": "P9A8567EC67EE4A5C"
             },
             "query": "SELECT max(\"protein\") FROM \"Nutrition\" WHERE $timeFilter GROUP BY time(1d) fill(0)"
+          }
+        ]
+      },
+      {
+        "id": 60,
+        "title": "RHR vs 30d",
+        "type": "stat",
+        "description": "Resting HR, 3d avg vs 30d baseline. Sustained +8-10% = fatigue/illness warning -> consider a rest day.",
+        "gridPos": {
+          "h": 8,
+          "w": 4,
+          "x": 0,
+          "y": 44
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 3
+                },
+                {
+                  "color": "red",
+                  "value": 8
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "graphMode": "none",
+          "textMode": "value",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "hide": true,
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT mean(\"value\") FROM \"RestingHR\" WHERE time > now() - 3d"
+          },
+          {
+            "refId": "B",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "hide": true,
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT mean(\"value\") FROM \"RestingHR\" WHERE time > now() - 30d"
+          },
+          {
+            "refId": "C",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "type": "reduce",
+            "reducer": "last",
+            "expression": "A",
+            "hide": true
+          },
+          {
+            "refId": "D",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "type": "reduce",
+            "reducer": "last",
+            "expression": "B",
+            "hide": true
+          },
+          {
+            "refId": "E",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "type": "math",
+            "expression": "($C / $D - 1) * 100"
+          }
+        ]
+      },
+      {
+        "id": 61,
+        "title": "HRV vs 30d",
+        "type": "stat",
+        "description": "HRV (RMSSD), 3d avg vs 30d baseline. Sustained big drops suggest poor recovery.",
+        "gridPos": {
+          "h": 8,
+          "w": 4,
+          "x": 4,
+          "y": 44
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": -10
+                },
+                {
+                  "color": "green",
+                  "value": -2
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "graphMode": "none",
+          "textMode": "value",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "hide": true,
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT mean(\"dailyRmssd\") FROM \"HRV\" WHERE time > now() - 3d"
+          },
+          {
+            "refId": "B",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "hide": true,
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT mean(\"dailyRmssd\") FROM \"HRV\" WHERE time > now() - 30d"
+          },
+          {
+            "refId": "C",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "type": "reduce",
+            "reducer": "last",
+            "expression": "A",
+            "hide": true
+          },
+          {
+            "refId": "D",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "type": "reduce",
+            "reducer": "last",
+            "expression": "B",
+            "hide": true
+          },
+          {
+            "refId": "E",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "type": "math",
+            "expression": "($C / $D - 1) * 100"
+          }
+        ]
+      },
+      {
+        "id": 62,
+        "title": "Zone Minutes (weekly)",
+        "type": "timeseries",
+        "description": "Active Zone Minutes: moderate + 2x vigorous. WHO target: 150/week.",
+        "gridPos": {
+          "h": 8,
+          "w": 16,
+          "x": 8,
+          "y": 44
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "min",
+            "decimals": 0,
+            "custom": {
+              "drawStyle": "bars",
+              "fillOpacity": 50,
+              "lineWidth": 0,
+              "barMaxWidth": 40,
+              "thresholdsStyle": {
+                "mode": "line"
+              }
+            },
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "orange",
+                  "value": null
+                },
+                {
+                  "color": "green",
+                  "value": 150
+                }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "AZM",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT sum(\"azm\") FROM (SELECT max(\"minutesFairlyActive\") + 2 * max(\"minutesVeryActive\") AS \"azm\" FROM \"Activity Minutes\" WHERE $timeFilter GROUP BY time(1d)) WHERE $timeFilter GROUP BY time(7d) fill(0)"
           }
         ]
       }
