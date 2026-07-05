@@ -11,7 +11,7 @@ repo -- `dashboard.json` / `scale-dashboard.json` are exports to import manually
 | Google Health fetcher | `fetch.py` (single file) | Docker `health-fetch`, polls every 5 min | fitbit-grafana-compatible measurements (`weight`, `HeartRate_Intraday`, `Sleep Summary`, ...) |
 | Xiaomi S400 scale reader | `scale/` package | systemd `scale-reader` on the Pi host (needs host Bluetooth, so not Docker) | `body_composition` measurement |
 | Xiaomi cloud scale sync | `scale/cloud_sync.py` | systemd `scale-sync.timer` (hourly oneshot), runs SmartScaleConnect via docker | `body_composition` measurement |
-| Hevy workout sync | `hevy/` package | systemd `hevy-sync.timer` (hourly oneshot), polls the official Hevy API | `workout` + `workout_set` measurements |
+| Hevy workout sync | `hevy/` package | webhook-driven: systemd `hevy-webhook` receiver (port 8787) exposed via Tailscale Funnel, triggers `hevy.sync` on each saved workout | `workout` + `workout_set` measurements |
 
 InfluxDB 3 Core runs in this repo's compose (`health-influxdb`, host port 8181,
 `--without-auth` -- the token env vars are placeholders).
@@ -53,12 +53,20 @@ Runtime config in `scale/config.yaml` (gitignored -- copy
   `scale-sync/scaleconnect.json` (gitignored) holds a long-lived passToken.
   If it expires, re-seed it from browser cookies on account.xiaomi.com
   (`userId` + `passToken`, written as `{"xiaomi:<email>": "<userId>:<passToken>"}`).
-- Hevy API: key lives in `hevy-sync/env` (gitignored, requires Hevy Pro). The
-  API has GET/POST/PUT but **no DELETE** -- deleting a workout must happen in
-  the app, and hevy-sync won't remove already-synced points (drop the
-  `workout`/`workout_set` tables to resync from scratch). The sync watermark is
-  MAX(time) on the `workout` measurement. A `hevy-mcp` MCP server (user-scoped
-  on the Windows machine) exposes the same API to Claude directly.
+- Hevy API: key + webhook token live in `hevy-sync/env` (gitignored, requires
+  Hevy Pro). The API has GET/POST/PUT but **no DELETE** -- deleting a workout
+  must happen in the app, and hevy-sync won't remove already-synced points
+  (drop the `workout`/`workout_set` tables to resync from scratch). The sync
+  watermark is MAX(time) on the `workout` measurement, so any sync heals prior
+  gaps. A `hevy-mcp` MCP server (user-scoped on the Windows machine) exposes
+  the same API to Claude directly.
+- Hevy webhook: Hevy POSTs to
+  `https://raspberrypi.<tailnet>.ts.net:8443/hevy-webhook` (Tailscale Funnel ->
+  `hevy-webhook.service` on 127.0.0.1:8787 -> spawns `hevy.sync`). **Funnel
+  must stay on port 8443**: on 443, tailscaled intercepts the Pi's tailscale
+  IP:443 for tailnet clients and hijacks nginx (breaks Grafana et al).
+  Subscription is managed via `/v1/webhook-subscription` (field `authToken`,
+  echoed back as `auth_token`).
 - Grafana dashboards: `dashboard.json` (Health), `scale-dashboard.json`,
   `training-dashboard.json` (Hevy data). Deploy via
   `POST /api/dashboards/db` as admin on the grafana container (mediastack).
@@ -77,6 +85,7 @@ ssh pi "cd ~/documents/code/raspberrypi/google-health-grafana && git pull && doc
 ssh pi "cd ~/documents/code/raspberrypi/google-health-grafana && git pull && ~/.local/bin/uv sync && sudo systemctl restart scale-reader"
 ssh pi "systemctl status scale-reader --no-pager"
 
-# Hevy sync (systemd oneshot + timer; manual run:)
+# Hevy sync (webhook-driven; manual run:)
 ssh pi "sudo systemctl start hevy-sync.service && journalctl -u hevy-sync -n 3 --no-pager"
+ssh pi "systemctl status hevy-webhook --no-pager"
 ```
