@@ -4,194 +4,1158 @@
     "uid": "google-health",
     "timezone": "browser",
     "refresh": "5m",
-    "time": {"from": "now-30d", "to": "now"},
-    "templating": {"list": []},
+    "time": {
+      "from": "now-30d",
+      "to": "now"
+    },
+    "templating": {
+      "list": []
+    },
     "panels": [
       {
         "id": 1,
         "title": "Weight",
         "type": "stat",
-        "gridPos": {"h": 8, "w": 4, "x": 0, "y": 0},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "gridPos": {
+          "h": 8,
+          "w": 4,
+          "x": 0,
+          "y": 0
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
         "fieldConfig": {
           "defaults": {
             "unit": "masskg",
             "decimals": 1,
-            "thresholds": {"mode": "absolute", "steps": [
-              {"color": "green", "value": null},
-              {"color": "yellow", "value": 85},
-              {"color": "red", "value": 90}
-            ]}
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 85
+                },
+                {
+                  "color": "red",
+                  "value": 90
+                }
+              ]
+            }
           }
         },
-        "options": {"graphMode": "none", "textMode": "value_and_name", "reduceOptions": {"calcs": ["lastNotNull"]}},
+        "options": {
+          "graphMode": "none",
+          "textMode": "value_and_name",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          }
+        },
         "targets": [
-          {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
-           "query": "SELECT last(\"weight\") FROM \"body_composition\"", "alias": "Current",
-           "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}},
-          {"refId": "B", "rawQuery": true, "resultFormat": "time_series",
-           "query": "SELECT last(\"weight\") - 82 FROM \"body_composition\"", "alias": "To Goal",
-           "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT last(\"weight\") FROM \"body_composition\"",
+            "alias": "Current",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          },
+          {
+            "refId": "B",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT last(\"weight\") - 82 FROM \"body_composition\"",
+            "alias": "To Goal",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
         ]
       },
       {
         "id": 2,
         "title": "Weight Over Time",
         "type": "timeseries",
-        "gridPos": {"h": 8, "w": 8, "x": 4, "y": 0},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 4,
+          "y": 0
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
         "fieldConfig": {
           "defaults": {
-            "unit": "masskg", "min": 78, "max": 100,
-            "custom": {"lineWidth": 2, "pointSize": 6, "showPoints": "always", "spanNulls": true, "fillOpacity": 5, "thresholdsStyle": {"mode": "line"}},
-            "color": {"mode": "fixed", "fixedColor": "red"},
-            "thresholds": {"mode": "absolute", "steps": [
-              {"color": "transparent", "value": null},
-              {"color": "green", "value": 82}
-            ]}
+            "unit": "masskg",
+            "min": 78,
+            "max": 100,
+            "custom": {
+              "lineWidth": 2,
+              "pointSize": 6,
+              "showPoints": "always",
+              "spanNulls": true,
+              "fillOpacity": 5,
+              "thresholdsStyle": {
+                "mode": "line"
+              }
+            },
+            "color": {
+              "mode": "fixed",
+              "fixedColor": "red"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "transparent",
+                  "value": null
+                },
+                {
+                  "color": "green",
+                  "value": 82
+                }
+              ]
+            }
           }
         },
         "targets": [
-          {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
-           "query": "SELECT mean(\"weight\") FROM \"body_composition\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Weight",
-           "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT mean(\"weight\") FROM \"body_composition\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "Weight",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
         ]
       },
       {
         "id": 3,
-        "title": "Calories Burned",
+        "title": "Energy Balance",
         "type": "timeseries",
-        "gridPos": {"h": 8, "w": 8, "x": 12, "y": 0},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 12,
+          "y": 0
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
         "fieldConfig": {
           "defaults": {
-            "unit": "kcal", "decimals": 0,
-            "custom": {"drawStyle": "bars", "fillOpacity": 40, "lineWidth": 1, "barMaxWidth": 30, "thresholdsStyle": {"mode": "line+area"}},
-            "color": {"mode": "thresholds"},
-            "thresholds": {"mode": "absolute", "steps": [
-              {"color": "green", "value": null},
-              {"color": "yellow", "value": 2300},
-              {"color": "red", "value": 2800}
-            ]}
-          }
+            "unit": "kcal",
+            "decimals": 0,
+            "custom": {
+              "drawStyle": "bars",
+              "fillOpacity": 45,
+              "lineWidth": 1,
+              "barMaxWidth": 20
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "In"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "semi-dark-blue"
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Burned"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "orange"
+                  }
+                },
+                {
+                  "id": "custom.drawStyle",
+                  "value": "line"
+                },
+                {
+                  "id": "custom.lineWidth",
+                  "value": 2
+                },
+                {
+                  "id": "custom.fillOpacity",
+                  "value": 0
+                }
+              ]
+            }
+          ]
         },
         "targets": [
-          {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
-           "query": "SELECT max(\"value\") FROM \"calories\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Calories",
-           "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "In",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT max(\"caloriesIn\") FROM \"Nutrition\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
+          },
+          {
+            "refId": "B",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "Burned",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT max(\"value\") FROM \"calories\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
+          }
         ]
       },
       {
         "id": 4,
         "title": "Exercise This Week",
         "type": "gapit-htmlgraphics-panel",
-        "gridPos": {"h": 8, "w": 4, "x": 20, "y": 0},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "gridPos": {
+          "h": 8,
+          "w": 4,
+          "x": 20,
+          "y": 0
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
         "targets": [
-          {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
-           "query": "SELECT count(\"duration\") FROM \"Activity Records\" WHERE \"activityName\" = 'WEIGHTLIFTING' AND time > now() - 7d GROUP BY time(1d) fill(0)",
-           "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT count(\"duration\") FROM \"Activity Records\" WHERE \"activityName\" = 'WEIGHTLIFTING' AND time > now() - 7d GROUP BY time(1d) fill(0)",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
         ],
         "options": {
-          "SVGBaseFix": true, "add100Percentage": true, "centerAlignContent": true, "overflow": "visible",
+          "SVGBaseFix": true,
+          "add100Percentage": true,
+          "centerAlignContent": true,
+          "overflow": "visible",
           "html": "<div id=\"ex\"></div>",
           "onRender": "const days=['M','T','W','T','F','S','S'];const c=htmlNode.querySelector('#ex');if(!c)return;let ad=new Set();try{const f=data?.series||[];if(f.length>0&&f[0].fields){const tf=f[0].fields.find(x=>x.name==='Time');const vf=f[0].fields.find(x=>x.name!=='Time');if(tf&&vf){for(let i=0;i<tf.values.length;i++){if(vf.values[i]>0){const d=new Date(tf.values[i]);ad.add(d.getDay())}}}}}catch(e){}const dm=[1,2,3,4,5,6,0];let h='<div style=\"display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px\">';h+='<div style=\"display:flex;gap:8px\">';for(let i=0;i<7;i++){const a=ad.has(dm[i]);const bg=a?'#69db7c':'#3a3a5a';const fg=a?'#1a1a2e':'#666';h+=`<div style=\"width:30px;height:30px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:${fg}\">${days[i]}</div>`}h+='</div>';h+=`<div style=\"text-align:center\"><span style=\"font-size:28px;font-weight:bold;color:#69db7c\">${ad.size}</span><span style=\"font-size:16px;color:#888\"> / 7</span><div style=\"color:#888;font-size:12px;margin-top:2px\">days active</div></div>`;h+='</div>';c.innerHTML=h;"
         }
       },
       {
-        "id": 10, "title": "Steps", "type": "timeseries",
-        "gridPos": {"h": 7, "w": 8, "x": 0, "y": 8},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
-        "fieldConfig": {"defaults": {"unit": "short", "decimals": 0, "custom": {"drawStyle": "bars", "fillOpacity": 35, "lineWidth": 1, "barMaxWidth": 25}, "color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 5000}, {"color": "green", "value": 10000}]}}},
-        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT max(\"value\") FROM \"Total Steps\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Steps", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}]
-      },
-      {
-        "id": 11, "title": "Activity Minutes", "type": "timeseries",
-        "gridPos": {"h": 7, "w": 8, "x": 8, "y": 8},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
-        "fieldConfig": {"defaults": {"unit": "m", "custom": {"drawStyle": "bars", "stacking": {"mode": "normal"}, "fillOpacity": 50, "lineWidth": 0, "barMaxWidth": 25}},
-          "overrides": [
-            {"matcher": {"id": "byName", "options": "Light"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]},
-            {"matcher": {"id": "byName", "options": "Moderate"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "yellow"}}]},
-            {"matcher": {"id": "byName", "options": "Intense"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]}
-          ]},
+        "id": 10,
+        "title": "Steps",
+        "type": "timeseries",
+        "gridPos": {
+          "h": 7,
+          "w": 8,
+          "x": 0,
+          "y": 16
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "custom": {
+              "drawStyle": "bars",
+              "fillOpacity": 35,
+              "lineWidth": 1,
+              "barMaxWidth": 25
+            },
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 5000
+                },
+                {
+                  "color": "green",
+                  "value": 10000
+                }
+              ]
+            }
+          }
+        },
         "targets": [
-          {"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT max(\"minutesLightlyActive\") FROM \"Activity Minutes\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Light", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}},
-          {"refId": "B", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT max(\"minutesFairlyActive\") FROM \"Activity Minutes\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Moderate", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}},
-          {"refId": "C", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT max(\"minutesVeryActive\") FROM \"Activity Minutes\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Intense", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT max(\"value\") FROM \"Total Steps\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "Steps",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
         ]
       },
       {
-        "id": 12, "title": "Distance", "type": "timeseries",
-        "gridPos": {"h": 7, "w": 8, "x": 16, "y": 8},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
-        "fieldConfig": {"defaults": {"unit": "km", "decimals": 1, "custom": {"drawStyle": "bars", "fillOpacity": 30, "lineWidth": 1, "barMaxWidth": 25}, "color": {"mode": "fixed", "fixedColor": "blue"}}},
-        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT max(\"value\") / 1000 FROM \"distance\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "km", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}]
-      },
-      {
-        "id": 20, "title": "Sleep Stages", "type": "timeseries",
-        "gridPos": {"h": 7, "w": 16, "x": 0, "y": 15},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
-        "fieldConfig": {"defaults": {"unit": "m", "custom": {"drawStyle": "bars", "stacking": {"mode": "normal"}, "fillOpacity": 60, "lineWidth": 0, "barMaxWidth": 25}},
+        "id": 11,
+        "title": "Activity Minutes",
+        "type": "timeseries",
+        "gridPos": {
+          "h": 7,
+          "w": 8,
+          "x": 8,
+          "y": 16
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "m",
+            "custom": {
+              "drawStyle": "bars",
+              "stacking": {
+                "mode": "normal"
+              },
+              "fillOpacity": 50,
+              "lineWidth": 0,
+              "barMaxWidth": 25
+            }
+          },
           "overrides": [
-            {"matcher": {"id": "byName", "options": "Deep"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "dark-blue"}}]},
-            {"matcher": {"id": "byName", "options": "REM"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "semi-dark-purple"}}]},
-            {"matcher": {"id": "byName", "options": "Light"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "light-blue"}}]}
-          ]},
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Light"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "green"
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Moderate"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "yellow"
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Intense"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "red"
+                  }
+                }
+              ]
+            }
+          ]
+        },
         "targets": [
-          {"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT max(\"minutesDeep\") FROM \"Sleep Summary\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Deep", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}},
-          {"refId": "B", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT max(\"minutesREM\") FROM \"Sleep Summary\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "REM", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}},
-          {"refId": "C", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT max(\"minutesLight\") FROM \"Sleep Summary\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Light", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT max(\"minutesLightlyActive\") FROM \"Activity Minutes\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "Light",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          },
+          {
+            "refId": "B",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT max(\"minutesFairlyActive\") FROM \"Activity Minutes\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "Moderate",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          },
+          {
+            "refId": "C",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT max(\"minutesVeryActive\") FROM \"Activity Minutes\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "Intense",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
         ]
       },
       {
-        "id": 21, "title": "Sleep Duration", "type": "timeseries",
-        "gridPos": {"h": 7, "w": 8, "x": 16, "y": 15},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
-        "fieldConfig": {"defaults": {"unit": "m", "decimals": 0, "custom": {"drawStyle": "bars", "fillOpacity": 30, "lineWidth": 1, "barMaxWidth": 25}, "color": {"mode": "fixed", "fixedColor": "blue"}}},
-        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT max(\"minutesAsleep\") FROM \"Sleep Summary\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Sleep (min)", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}]
+        "id": 12,
+        "title": "Distance",
+        "type": "timeseries",
+        "gridPos": {
+          "h": 7,
+          "w": 8,
+          "x": 16,
+          "y": 16
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "km",
+            "decimals": 1,
+            "custom": {
+              "drawStyle": "bars",
+              "fillOpacity": 30,
+              "lineWidth": 1,
+              "barMaxWidth": 25
+            },
+            "color": {
+              "mode": "fixed",
+              "fixedColor": "blue"
+            }
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT max(\"value\") / 1000 FROM \"distance\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "km",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
+        ]
       },
       {
-        "id": 30, "title": "Resting Heart Rate", "type": "timeseries",
-        "gridPos": {"h": 7, "w": 8, "x": 0, "y": 22},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
-        "fieldConfig": {"defaults": {"unit": "bpm", "color": {"mode": "fixed", "fixedColor": "dark-red"}, "custom": {"lineWidth": 2, "pointSize": 4, "showPoints": "always", "spanNulls": true, "fillOpacity": 5}}},
-        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT mean(\"value\") FROM \"RestingHR\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "RHR", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}]
+        "id": 20,
+        "title": "Sleep Stages",
+        "type": "timeseries",
+        "gridPos": {
+          "h": 7,
+          "w": 16,
+          "x": 0,
+          "y": 23
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "m",
+            "custom": {
+              "drawStyle": "bars",
+              "stacking": {
+                "mode": "normal"
+              },
+              "fillOpacity": 60,
+              "lineWidth": 0,
+              "barMaxWidth": 25
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Deep"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "dark-blue"
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "REM"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "semi-dark-purple"
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Light"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "light-blue"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT max(\"minutesDeep\") FROM \"Sleep Summary\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "Deep",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          },
+          {
+            "refId": "B",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT max(\"minutesREM\") FROM \"Sleep Summary\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "REM",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          },
+          {
+            "refId": "C",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT max(\"minutesLight\") FROM \"Sleep Summary\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "Light",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
+        ]
       },
       {
-        "id": 31, "title": "HRV", "type": "timeseries",
-        "gridPos": {"h": 7, "w": 8, "x": 8, "y": 22},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
-        "fieldConfig": {"defaults": {"unit": "ms", "color": {"mode": "fixed", "fixedColor": "purple"}, "custom": {"lineWidth": 2, "pointSize": 4, "showPoints": "always", "spanNulls": true, "fillOpacity": 5}}},
-        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT mean(\"dailyRmssd\") FROM \"HRV\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "RMSSD", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}]
+        "id": 21,
+        "title": "Sleep Duration",
+        "type": "timeseries",
+        "gridPos": {
+          "h": 7,
+          "w": 8,
+          "x": 16,
+          "y": 23
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "m",
+            "decimals": 0,
+            "custom": {
+              "drawStyle": "bars",
+              "fillOpacity": 30,
+              "lineWidth": 1,
+              "barMaxWidth": 25
+            },
+            "color": {
+              "mode": "fixed",
+              "fixedColor": "blue"
+            }
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT max(\"minutesAsleep\") FROM \"Sleep Summary\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "Sleep (min)",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
+        ]
       },
       {
-        "id": 32, "title": "SpO2", "type": "timeseries",
-        "gridPos": {"h": 7, "w": 8, "x": 16, "y": 22},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
-        "fieldConfig": {"defaults": {"unit": "percent", "min": 90, "max": 100, "color": {"mode": "fixed", "fixedColor": "blue"}, "custom": {"lineWidth": 2, "pointSize": 4, "showPoints": "always", "spanNulls": true, "fillOpacity": 5}}},
-        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT mean(\"avg\") FROM \"SPO2\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "SpO2", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}]
+        "id": 30,
+        "title": "Resting Heart Rate",
+        "type": "timeseries",
+        "gridPos": {
+          "h": 7,
+          "w": 8,
+          "x": 0,
+          "y": 30
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bpm",
+            "color": {
+              "mode": "fixed",
+              "fixedColor": "dark-red"
+            },
+            "custom": {
+              "lineWidth": 2,
+              "pointSize": 4,
+              "showPoints": "always",
+              "spanNulls": true,
+              "fillOpacity": 5
+            }
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT mean(\"value\") FROM \"RestingHR\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "RHR",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
+        ]
       },
       {
-        "id": 40, "title": "Body Fat %", "type": "timeseries",
-        "gridPos": {"h": 7, "w": 8, "x": 0, "y": 29},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
-        "fieldConfig": {"defaults": {"unit": "percent", "color": {"mode": "fixed", "fixedColor": "orange"}, "custom": {"lineWidth": 2, "pointSize": 5, "showPoints": "always", "spanNulls": true, "fillOpacity": 5}}},
-        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT mean(\"body_fat_pct\") FROM \"body_composition\" WHERE $timeFilter AND \"body_fat_pct\" > 0 GROUP BY time(1d) fill(none)", "alias": "Body Fat %", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}]
+        "id": 31,
+        "title": "HRV",
+        "type": "timeseries",
+        "gridPos": {
+          "h": 7,
+          "w": 8,
+          "x": 8,
+          "y": 30
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "color": {
+              "mode": "fixed",
+              "fixedColor": "purple"
+            },
+            "custom": {
+              "lineWidth": 2,
+              "pointSize": 4,
+              "showPoints": "always",
+              "spanNulls": true,
+              "fillOpacity": 5
+            }
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT mean(\"dailyRmssd\") FROM \"HRV\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "RMSSD",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
+        ]
       },
       {
-        "id": 41, "title": "Breathing Rate", "type": "timeseries",
-        "gridPos": {"h": 7, "w": 8, "x": 8, "y": 29},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
-        "fieldConfig": {"defaults": {"unit": "short", "color": {"mode": "fixed", "fixedColor": "green"}, "custom": {"lineWidth": 2, "pointSize": 4, "showPoints": "always", "spanNulls": true, "fillOpacity": 5}}},
-        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT mean(\"value\") FROM \"BreathingRate\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Breaths/min", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}]
+        "id": 32,
+        "title": "SpO2",
+        "type": "timeseries",
+        "gridPos": {
+          "h": 7,
+          "w": 8,
+          "x": 16,
+          "y": 30
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 90,
+            "max": 100,
+            "color": {
+              "mode": "fixed",
+              "fixedColor": "blue"
+            },
+            "custom": {
+              "lineWidth": 2,
+              "pointSize": 4,
+              "showPoints": "always",
+              "spanNulls": true,
+              "fillOpacity": 5
+            }
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT mean(\"avg\") FROM \"SPO2\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "SpO2",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
+        ]
       },
       {
-        "id": 42, "title": "Heart Rate", "type": "timeseries",
-        "gridPos": {"h": 7, "w": 8, "x": 16, "y": 29},
-        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
-        "fieldConfig": {"defaults": {"unit": "bpm", "color": {"mode": "fixed", "fixedColor": "red"}, "custom": {"lineWidth": 1, "showPoints": "never", "fillOpacity": 10}}},
-        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "query": "SELECT mean(\"value\") FROM \"HeartRate_Intraday\" WHERE $timeFilter GROUP BY time(5m) fill(none)", "alias": "HR", "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}]
+        "id": 40,
+        "title": "Body Fat %",
+        "type": "timeseries",
+        "gridPos": {
+          "h": 7,
+          "w": 8,
+          "x": 0,
+          "y": 37
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "fixed",
+              "fixedColor": "orange"
+            },
+            "custom": {
+              "lineWidth": 2,
+              "pointSize": 5,
+              "showPoints": "always",
+              "spanNulls": true,
+              "fillOpacity": 5
+            }
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT mean(\"body_fat_pct\") FROM \"body_composition\" WHERE $timeFilter AND \"body_fat_pct\" > 0 GROUP BY time(1d) fill(none)",
+            "alias": "Body Fat %",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
+        ]
+      },
+      {
+        "id": 41,
+        "title": "Breathing Rate",
+        "type": "timeseries",
+        "gridPos": {
+          "h": 7,
+          "w": 8,
+          "x": 8,
+          "y": 37
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {
+              "mode": "fixed",
+              "fixedColor": "green"
+            },
+            "custom": {
+              "lineWidth": 2,
+              "pointSize": 4,
+              "showPoints": "always",
+              "spanNulls": true,
+              "fillOpacity": 5
+            }
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT mean(\"value\") FROM \"BreathingRate\" WHERE $timeFilter GROUP BY time(1d) fill(none)",
+            "alias": "Breaths/min",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
+        ]
+      },
+      {
+        "id": 42,
+        "title": "Heart Rate",
+        "type": "timeseries",
+        "gridPos": {
+          "h": 7,
+          "w": 8,
+          "x": 16,
+          "y": 37
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bpm",
+            "color": {
+              "mode": "fixed",
+              "fixedColor": "red"
+            },
+            "custom": {
+              "lineWidth": 1,
+              "showPoints": "never",
+              "fillOpacity": 10
+            }
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "query": "SELECT mean(\"value\") FROM \"HeartRate_Intraday\" WHERE $timeFilter GROUP BY time(5m) fill(none)",
+            "alias": "HR",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            }
+          }
+        ]
+      },
+      {
+        "id": 50,
+        "title": "Daily Net (In - Burned)",
+        "type": "timeseries",
+        "description": "Negative = deficit. Only shown for days with logged food.",
+        "gridPos": {
+          "h": 8,
+          "w": 9,
+          "x": 0,
+          "y": 8
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "kcal",
+            "decimals": 0,
+            "custom": {
+              "drawStyle": "bars",
+              "fillOpacity": 70,
+              "lineWidth": 0,
+              "barMaxWidth": 20
+            },
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 0
+                }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "In",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT max(\"caloriesIn\") FROM \"Nutrition\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
+          },
+          {
+            "refId": "B",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "Burned",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT max(\"value\") FROM \"calories\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "joinByField",
+            "options": {
+              "byField": "Time",
+              "mode": "outer"
+            }
+          },
+          {
+            "id": "calculateField",
+            "options": {
+              "mode": "binary",
+              "alias": "Net",
+              "binary": {
+                "left": "In",
+                "operator": "-",
+                "right": "Burned"
+              },
+              "replaceFields": true
+            }
+          }
+        ]
+      },
+      {
+        "id": 51,
+        "title": "7d Avg Net",
+        "type": "stat",
+        "description": "Plan target: -300 to -500 kcal/day.",
+        "gridPos": {
+          "h": 8,
+          "w": 3,
+          "x": 9,
+          "y": 8
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "kcal",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": -300
+                },
+                {
+                  "color": "red",
+                  "value": 0
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "graphMode": "none",
+          "textMode": "value",
+          "reduceOptions": {
+            "calcs": [
+              "mean"
+            ]
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "In",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT max(\"caloriesIn\") FROM \"Nutrition\" WHERE time > now() - 7d GROUP BY time(1d) fill(none)"
+          },
+          {
+            "refId": "B",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "Burned",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT max(\"value\") FROM \"calories\" WHERE time > now() - 7d GROUP BY time(1d) fill(none)"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "joinByField",
+            "options": {
+              "byField": "Time",
+              "mode": "outer"
+            }
+          },
+          {
+            "id": "calculateField",
+            "options": {
+              "mode": "binary",
+              "alias": "Net",
+              "binary": {
+                "left": "In",
+                "operator": "-",
+                "right": "Burned"
+              },
+              "replaceFields": true
+            }
+          }
+        ]
+      },
+      {
+        "id": 52,
+        "title": "Protein",
+        "type": "timeseries",
+        "description": "Plan target: 170-205 g/day.",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "massg",
+            "decimals": 0,
+            "custom": {
+              "drawStyle": "bars",
+              "fillOpacity": 45,
+              "lineWidth": 1,
+              "barMaxWidth": 20,
+              "thresholdsStyle": {
+                "mode": "line"
+              }
+            },
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "orange",
+                  "value": null
+                },
+                {
+                  "color": "green",
+                  "value": 170
+                },
+                {
+                  "color": "yellow",
+                  "value": 205
+                }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "Protein",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT max(\"protein\") FROM \"Nutrition\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
+          }
+        ]
       }
     ]
   },
