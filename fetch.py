@@ -396,6 +396,77 @@ def fetch_exercises(token: str) -> list:
     return points
 
 
+def _protein_grams(nutrition_log: dict) -> float:
+    for n in nutrition_log.get("nutrients", []):
+        if n.get("nutrient") == "PROTEIN":
+            return float(n.get("quantity", {}).get("grams", 0))
+    return 0.0
+
+
+def _nutrition_daily_totals(raw_points: list) -> dict:
+    """Collapse nutrition-log entries into daily totals.
+
+    MFP data arrives as per-item rows and/or per-meal aggregate rows (empty
+    name or "... Summary") describing the same food -- per meal, prefer one
+    aggregate row when present, otherwise sum the item rows.
+    """
+    meals: dict = {}
+    for dp in raw_points:
+        n = dp.get("nutritionLog", {})
+        date_dict = n.get("interval", {}).get("civilStartTime", {}).get("date")
+        if not date_dict:
+            continue
+        day = civil_to_datetime({"date": date_dict})
+        name = n.get("foodDisplayName") or ""
+        entry = {
+            "caloriesIn": float(n.get("energy", {}).get("kcal", 0)),
+            "protein": _protein_grams(n),
+            "carbs": float(n.get("totalCarbohydrate", {}).get("grams", 0)),
+            "fat": float(n.get("totalFat", {}).get("grams", 0)),
+        }
+        bucket = meals.setdefault((day, n.get("mealType", "UNKNOWN")), {"aggregates": [], "items": []})
+        kind = "aggregates" if (not name or name.endswith("Summary")) else "items"
+        bucket[kind].append(entry)
+
+    days: dict = {}
+    for (day, _meal), bucket in meals.items():
+        rows = bucket["aggregates"][:1] if bucket["aggregates"] else bucket["items"]
+        totals = days.setdefault(day, {"caloriesIn": 0.0, "protein": 0.0, "carbs": 0.0, "fat": 0.0})
+        for entry in rows:
+            for k in totals:
+                totals[k] = round(totals[k] + entry[k], 1)
+    return days
+
+
+def fetch_nutrition(token: str, start: datetime) -> list:
+    """Measurement: Nutrition, fields: caloriesIn, protein, carbs, fat (daily totals from MFP)."""
+    raw = []
+    try:
+        page_token = None
+        while True:
+            url = "/users/me/dataTypes/nutrition-log/dataPoints?pageSize=100"
+            if page_token:
+                url += f"&pageToken={page_token}"
+            data = api_get(token, url)
+            page = data.get("dataPoints", [])
+            raw.extend(page)
+            # newest-first; stop once a whole page predates the fetch window
+            page_days = [
+                civil_to_datetime({"date": d})
+                for dp in page
+                if (d := dp.get("nutritionLog", {}).get("interval", {}).get("civilStartTime", {}).get("date"))
+            ]
+            page_token = data.get("nextPageToken")
+            if not page_token or (page_days and max(page_days) < start):
+                break
+    except HTTPError as e:
+        log.warning("Failed to fetch nutrition: %s", e.code)
+
+    points = [pt("Nutrition", day.isoformat(), totals) for day, totals in _nutrition_daily_totals(raw).items()]
+    log.info("Fetched nutrition: %s days", len(points))
+    return points
+
+
 # --- InfluxDB ---
 
 
@@ -464,6 +535,7 @@ def run_once(cfg: dict, window_days: int) -> None:
     all_points.extend(fetch_spo2_intraday(token))
     all_points.extend(fetch_daily_rollups(token, start, now))
     all_points.extend(fetch_exercises(token))
+    all_points.extend(fetch_nutrition(token, start))
 
     points = _filter_window(all_points, now - timedelta(days=window_days))
     write_to_influx(cfg, points)
