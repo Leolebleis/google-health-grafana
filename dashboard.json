@@ -212,6 +212,60 @@
                   "value": 0
                 }
               ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "InRaw"
+              },
+              "properties": [
+                {
+                  "id": "custom.hideFrom",
+                  "value": {
+                    "legend": true,
+                    "tooltip": true,
+                    "viz": true
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Net"
+              },
+              "properties": [
+                {
+                  "id": "custom.drawStyle",
+                  "value": "points"
+                },
+                {
+                  "id": "custom.pointSize",
+                  "value": 8
+                },
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "thresholds"
+                  }
+                },
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": null
+                      },
+                      {
+                        "color": "red",
+                        "value": 0
+                      }
+                    ]
+                  }
+                }
+              ]
             }
           ]
         },
@@ -225,7 +279,7 @@
               "type": "influxdb",
               "uid": "P9A8567EC67EE4A5C"
             },
-            "query": "SELECT max(\"caloriesIn\") FROM \"Nutrition\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
+            "query": "SELECT max(\"caloriesIn\") FROM \"Nutrition\" WHERE $timeFilter GROUP BY time(1d) fill(0)"
           },
           {
             "refId": "B",
@@ -237,6 +291,39 @@
               "uid": "P9A8567EC67EE4A5C"
             },
             "query": "SELECT max(\"value\") FROM \"calories\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
+          },
+          {
+            "refId": "C",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "InRaw",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT max(\"caloriesIn\") FROM \"Nutrition\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "joinByField",
+            "options": {
+              "byField": "Time",
+              "mode": "outer"
+            }
+          },
+          {
+            "id": "calculateField",
+            "options": {
+              "mode": "binary",
+              "alias": "Net",
+              "binary": {
+                "left": "InRaw",
+                "operator": "-",
+                "right": "Burned"
+              },
+              "replaceFields": false
+            }
           }
         ]
       },
@@ -910,104 +997,14 @@
         ]
       },
       {
-        "id": 50,
-        "title": "Daily Net (In - Burned)",
-        "type": "timeseries",
-        "description": "Negative = deficit. Only shown for days with logged food.",
-        "gridPos": {
-          "h": 8,
-          "w": 9,
-          "x": 0,
-          "y": 8
-        },
-        "datasource": {
-          "type": "influxdb",
-          "uid": "P9A8567EC67EE4A5C"
-        },
-        "fieldConfig": {
-          "defaults": {
-            "unit": "kcal",
-            "decimals": 0,
-            "custom": {
-              "drawStyle": "bars",
-              "fillOpacity": 70,
-              "lineWidth": 0,
-              "barMaxWidth": 20
-            },
-            "color": {
-              "mode": "thresholds"
-            },
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "red",
-                  "value": 0
-                }
-              ]
-            }
-          }
-        },
-        "targets": [
-          {
-            "refId": "A",
-            "rawQuery": true,
-            "resultFormat": "time_series",
-            "alias": "In",
-            "datasource": {
-              "type": "influxdb",
-              "uid": "P9A8567EC67EE4A5C"
-            },
-            "query": "SELECT max(\"caloriesIn\") FROM \"Nutrition\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
-          },
-          {
-            "refId": "B",
-            "rawQuery": true,
-            "resultFormat": "time_series",
-            "alias": "Burned",
-            "datasource": {
-              "type": "influxdb",
-              "uid": "P9A8567EC67EE4A5C"
-            },
-            "query": "SELECT max(\"value\") FROM \"calories\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
-          }
-        ],
-        "transformations": [
-          {
-            "id": "joinByField",
-            "options": {
-              "byField": "Time",
-              "mode": "outer"
-            }
-          },
-          {
-            "id": "calculateField",
-            "options": {
-              "mode": "binary",
-              "alias": "Net",
-              "binary": {
-                "left": "In",
-                "operator": "-",
-                "right": "Burned"
-              },
-              "replaceFields": true
-            }
-          }
-        ]
-      },
-      {
         "id": 51,
         "title": "7d Avg Net",
         "type": "stat",
         "description": "Plan target: -300 to -500 kcal/day.",
         "gridPos": {
           "h": 8,
-          "w": 3,
-          "x": 9,
+          "w": 4,
+          "x": 0,
           "y": 8
         },
         "datasource": {
@@ -1100,8 +1097,8 @@
         "description": "Plan target: 170-205 g/day.",
         "gridPos": {
           "h": 8,
-          "w": 12,
-          "x": 12,
+          "w": 20,
+          "x": 4,
           "y": 8
         },
         "datasource": {
@@ -1153,7 +1150,7 @@
               "type": "influxdb",
               "uid": "P9A8567EC67EE4A5C"
             },
-            "query": "SELECT max(\"protein\") FROM \"Nutrition\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
+            "query": "SELECT max(\"protein\") FROM \"Nutrition\" WHERE $timeFilter GROUP BY time(1d) fill(0)"
           }
         ]
       }
