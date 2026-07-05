@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Hevy workout sync hourly
+
+[Timer]
+OnBootSec=7min
+OnUnitActiveSec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target
