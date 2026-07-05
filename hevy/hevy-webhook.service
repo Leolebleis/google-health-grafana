@@ -1,0 +1,17 @@
+[Unit]
+Description=Hevy webhook receiver (triggers sync on new workouts)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=leo
+WorkingDirectory=/home/leo/documents/code/raspberrypi/google-health-grafana
+EnvironmentFile=/home/leo/documents/code/raspberrypi/google-health-grafana/hevy-sync/env
+ExecStart=/home/leo/documents/code/raspberrypi/google-health-grafana/.venv/bin/python -m hevy.webhook
+Environment=PYTHONPATH=/home/leo/documents/code/raspberrypi/google-health-grafana
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
