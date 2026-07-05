@@ -69,15 +69,12 @@ def _daily_weight_means(weights: list[tuple[date, float]], window_start: date) -
 
 
 def _ols_slope_kg_per_day(daily: dict[date, float], window_start: date) -> float:
+    """Least-squares slope. Caller guarantees >= _MIN_SLOPE_POINTS distinct days, so denom > 0."""
     pairs = [(float((day - window_start).days), kg) for day, kg in daily.items()]
     n = len(pairs)
-    if n < _MIN_SLOPE_POINTS:
-        return 0.0
     mean_x = sum(x for x, _ in pairs) / n
     mean_y = sum(y for _, y in pairs) / n
     denom = sum((x - mean_x) ** 2 for x, _ in pairs)
-    if denom == 0.0:
-        return 0.0
     return sum((x - mean_x) * (y - mean_y) for x, y in pairs) / denom
 
 
@@ -108,8 +105,7 @@ def compute_target(
     window_start = today - timedelta(days=cfg.window_days)
 
     # Intake: logged days only, today excluded (partial day)
-    by_day = {day: kcal for day, kcal in intake if window_start <= day < today}
-    logged = {day: kcal for day, kcal in by_day.items() if kcal >= cfg.min_daily_kcal}
+    logged = {day: kcal for day, kcal in intake if window_start <= day < today and kcal >= cfg.min_daily_kcal}
     logged_days = len(logged)
     intake_mean = round(sum(logged.values()) / logged_days, 1) if logged_days else None
 

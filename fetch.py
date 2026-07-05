@@ -19,7 +19,7 @@ from urllib.request import Request, urlopen
 
 from influxdb_client_3 import InfluxDBClient3, Point
 
-from nutrition.target import LastGood, compute_target
+from nutrition.target import LastGood, TargetConfig, compute_target
 
 HEALTH_API = "https://health.googleapis.com/v4"
 TOKEN_URL = "https://oauth2.googleapis.com/token"  # noqa: S105
@@ -495,14 +495,18 @@ def fetch_nutrition(token: str, start: datetime) -> list:
 # --- InfluxDB ---
 
 
-def write_to_influx(cfg: dict, points: list) -> None:
-    if not points:
-        return
-    client = InfluxDBClient3(
+def _influx_client(cfg: dict) -> InfluxDBClient3:
+    return InfluxDBClient3(
         host=cfg["influx_url"],
         token=cfg["influx_token"],
         database=cfg["influx_database"],
     )
+
+
+def write_to_influx(cfg: dict, points: list) -> None:
+    if not points:
+        return
+    client = _influx_client(cfg)
 
     influx_points = []
     for p in points:
@@ -528,11 +532,16 @@ def write_to_influx(cfg: dict, points: list) -> None:
 # --- Adaptive calorie target (design: docs/superpowers/specs/2026-07-05-adaptive-calorie-target-design.md) ---
 
 
-def _influx_rows(client, sql: str) -> list:
+def _influx_rows(client, sql: str, expected_missing: bool = False) -> list:
+    """Run a query, returning [] on failure.
+
+    expected_missing: the query touches a table/columns that legitimately may
+    not exist yet (cold start) -- log at debug instead of warning.
+    """
     try:
         return client.query(sql).to_pylist()
-    except Exception as e:  # table may not exist yet (first run)
-        log.debug("calorie-target query failed (expected until first ok point): %s", e)
+    except Exception as e:
+        (log.debug if expected_missing else log.warning)("calorie-target query failed: %s", e)
         return []
 
 
@@ -548,23 +557,17 @@ def update_calorie_target(cfg: dict) -> None:
     fetches only cover 2 days, and the scale's body_composition points never
     pass through this process at all. The DB is the one complete store.
     """
-    client = InfluxDBClient3(
-        host=cfg["influx_url"],
-        token=cfg["influx_token"],
-        database=cfg["influx_database"],
-    )
+    client = _influx_client(cfg)
+    # window_days + 1-day boundary buffer, derived so the SQL follows the constant
+    window = f"now() - interval '{TargetConfig().window_days + 1} days'"
     try:
-        # '22 days' = TargetConfig.window_days (21) + 1-day boundary buffer -- keep in sync
-        intake_rows = _influx_rows(
-            client, "SELECT time, \"caloriesIn\" FROM \"Nutrition\" WHERE time >= now() - interval '22 days'"
-        )
-        weight_rows = _influx_rows(
-            client, "SELECT time, \"weight\" FROM \"body_composition\" WHERE time >= now() - interval '22 days'"
-        )
+        intake_rows = _influx_rows(client, f'SELECT time, "caloriesIn" FROM "Nutrition" WHERE time >= {window}')
+        weight_rows = _influx_rows(client, f'SELECT time, "weight" FROM "body_composition" WHERE time >= {window}')
         last_rows = _influx_rows(
             client,
             "SELECT \"target\", \"maintenance\" FROM \"calorie_target\" "
             "WHERE \"status\" = 'ok' AND time >= now() - interval '90 days' ORDER BY time DESC LIMIT 1",
+            expected_missing=True,  # no ok point exists until the first live target
         )
     finally:
         client.close()
