@@ -59,7 +59,7 @@
       },
       {
         "id": 3,
-        "title": "Calories This Week",
+        "title": "Calories Burned",
         "type": "timeseries",
         "gridPos": {"h": 8, "w": 8, "x": 12, "y": 0},
         "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
@@ -77,7 +77,7 @@
         },
         "targets": [
           {"refId": "A", "rawQuery": true, "resultFormat": "time_series",
-           "query": "SELECT max(\"value\") FROM \"calories\" WHERE time > now() - 7d GROUP BY time(1d) fill(none)", "alias": "Calories",
+           "query": "SELECT max(\"value\") FROM \"calories\" WHERE $timeFilter GROUP BY time(1d) fill(none)", "alias": "Calories",
            "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"}}
         ]
       },
