@@ -21,9 +21,9 @@ InfluxDB 3 Core runs in this repo's compose (`health-influxdb`, host port 8181,
 ```bash
 uv sync                                  # Python 3.13, deps + dev group
 uv run pytest --cov -v                   # 80% coverage gate
-uv run ruff check scale/ hevy/ tests/
-uv run ruff format --check scale/ hevy/ tests/
-uv run ty check scale/ hevy/
+uv run ruff check scale/ hevy/ nutrition/ tests/
+uv run ruff format --check scale/ hevy/ nutrition/ tests/
+uv run ty check scale/ hevy/ nutrition/
 ```
 
 CI runs exactly these. `fetch.py` is deliberately outside lint/type/test scope;
