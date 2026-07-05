@@ -328,9 +328,10 @@ def fetch_daily_rollups(token: str, start: datetime, end: datetime) -> list:
             lambda v: {"value": round(float(v.get("totalCalories", {}).get("kcalSum", 0)), 1)},
         ),
         (
-            # same measurement/timestamps as total-calories, so the fields merge
+            # same measurement/timestamps as total-calories, so the fields merge.
+            # unlike total-calories, this rollup accepts the full window.
             "active-energy-burned",
-            True,
+            False,
             "calories",
             lambda v: {"active": round(float(v.get("activeEnergyBurned", {}).get("kcalSum", 0)), 1)},
         ),
