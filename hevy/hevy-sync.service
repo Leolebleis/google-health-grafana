@@ -1,0 +1,12 @@
+[Unit]
+Description=Hevy workout sync (Hevy API -> InfluxDB)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=leo
+WorkingDirectory=/home/leo/documents/code/raspberrypi/google-health-grafana
+EnvironmentFile=/home/leo/documents/code/raspberrypi/google-health-grafana/hevy-sync/env
+ExecStart=/home/leo/documents/code/raspberrypi/google-health-grafana/.venv/bin/python -m hevy.sync
+Environment=PYTHONPATH=/home/leo/documents/code/raspberrypi/google-health-grafana

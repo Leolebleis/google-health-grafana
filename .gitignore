@@ -8,6 +8,8 @@ influxdb3-token
 scale/config.yaml
 scale-sync/*
 !scale-sync/scaleconnect.example.yaml
+hevy-sync/*
+!hevy-sync/env.example
 .venv/
 __pycache__/
 *.pyc

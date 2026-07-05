@@ -13,8 +13,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --frozen
-      - run: uv run ruff check scale/ tests/
-      - run: uv run ruff format --check scale/ tests/
+      - run: uv run ruff check scale/ hevy/ tests/
+      - run: uv run ruff format --check scale/ hevy/ tests/
 
   type-check:
     runs-on: ubuntu-latest
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --frozen
-      - run: uv run ty check scale/
+      - run: uv run ty check scale/ hevy/
 
   test:
     runs-on: ubuntu-latest

@@ -1,0 +1,123 @@
+{
+  "dashboard": {
+    "title": "Training",
+    "uid": "training",
+    "timezone": "browser",
+    "refresh": "5m",
+    "time": {"from": "now-90d", "to": "now"},
+    "templating": {"list": [
+      {
+        "name": "exercise",
+        "type": "query",
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "query": "SHOW TAG VALUES FROM \"workout_set\" WITH KEY = \"exercise\"",
+        "refresh": 2,
+        "sort": 1,
+        "includeAll": false,
+        "multi": false
+      }
+    ]},
+    "panels": [
+      {
+        "id": 1,
+        "title": "Side Delt Sets (7d)",
+        "description": "Hard sets of lateral raises / upright rows. Plan target: 12-18/week.",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 4, "x": 0, "y": 0},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {"defaults": {"unit": "short", "decimals": 0, "thresholds": {"mode": "absolute", "steps": [
+          {"color": "red", "value": null},
+          {"color": "yellow", "value": 9},
+          {"color": "green", "value": 12}
+        ]}}},
+        "options": {"graphMode": "none", "textMode": "value", "reduceOptions": {"calcs": ["lastNotNull"]}},
+        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series",
+          "query": "SELECT count(\"reps\") FROM \"workout_set\" WHERE (\"exercise\" =~ /lateral raise|upright row/i) AND \"set_type\" != 'warmup' AND time > now() - 7d"}]
+      },
+      {
+        "id": 2,
+        "title": "Back Sets (7d)",
+        "description": "Hard sets for lats / upper back. Plan target: 10-16/week.",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 4, "x": 4, "y": 0},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {"defaults": {"unit": "short", "decimals": 0, "thresholds": {"mode": "absolute", "steps": [
+          {"color": "red", "value": null},
+          {"color": "yellow", "value": 7},
+          {"color": "green", "value": 10}
+        ]}}},
+        "options": {"graphMode": "none", "textMode": "value", "reduceOptions": {"calcs": ["lastNotNull"]}},
+        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series",
+          "query": "SELECT count(\"reps\") FROM \"workout_set\" WHERE (\"muscle_group\" =~ /lats|upper_back/) AND \"set_type\" != 'warmup' AND time > now() - 7d"}]
+      },
+      {
+        "id": 3,
+        "title": "Workouts (7d)",
+        "description": "Habit target: 3-4/week.",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 4, "x": 8, "y": 0},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {"defaults": {"unit": "short", "decimals": 0, "thresholds": {"mode": "absolute", "steps": [
+          {"color": "red", "value": null},
+          {"color": "yellow", "value": 2},
+          {"color": "green", "value": 3}
+        ]}}},
+        "options": {"graphMode": "none", "textMode": "value", "reduceOptions": {"calcs": ["lastNotNull"]}},
+        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series",
+          "query": "SELECT count(\"set_count\") FROM \"workout\" WHERE time > now() - 7d"}]
+      },
+      {
+        "id": 4,
+        "title": "Weekly Volume",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 4, "x": 12, "y": 0},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {"defaults": {"unit": "masskg", "decimals": 0, "color": {"mode": "fixed", "fixedColor": "blue"}}},
+        "options": {"graphMode": "area", "textMode": "value", "reduceOptions": {"calcs": ["lastNotNull"]}},
+        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series",
+          "query": "SELECT sum(\"volume_kg\") FROM \"workout_set\" WHERE time > now() - 7d"}]
+      },
+      {
+        "id": 10,
+        "title": "Weekly Sets by Muscle Group",
+        "type": "timeseries",
+        "gridPos": {"h": 9, "w": 12, "x": 0, "y": 6},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {"defaults": {"unit": "short", "custom": {"drawStyle": "bars", "stacking": {"mode": "normal"}, "fillOpacity": 60, "lineWidth": 0, "barMaxWidth": 40}}},
+        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "alias": "$tag_muscle_group",
+          "query": "SELECT count(\"reps\") FROM \"workout_set\" WHERE \"set_type\" != 'warmup' AND $timeFilter GROUP BY time(7d), \"muscle_group\" fill(0)"}]
+      },
+      {
+        "id": 11,
+        "title": "Top Set Weight — $exercise",
+        "type": "timeseries",
+        "gridPos": {"h": 9, "w": 12, "x": 12, "y": 6},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {"defaults": {"unit": "masskg", "custom": {"lineWidth": 2, "pointSize": 6, "showPoints": "always", "spanNulls": true, "fillOpacity": 5}, "color": {"mode": "fixed", "fixedColor": "green"}}},
+        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "alias": "top set",
+          "query": "SELECT max(\"weight_kg\") FROM \"workout_set\" WHERE \"exercise\" = '$exercise' AND $timeFilter GROUP BY time(1d) fill(none)"}]
+      },
+      {
+        "id": 12,
+        "title": "Weekly Training Volume",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 15},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {"defaults": {"unit": "masskg", "decimals": 0, "custom": {"drawStyle": "bars", "fillOpacity": 40, "lineWidth": 1, "barMaxWidth": 40}, "color": {"mode": "fixed", "fixedColor": "blue"}}},
+        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "alias": "volume",
+          "query": "SELECT sum(\"volume_kg\") FROM \"workout_set\" WHERE $timeFilter GROUP BY time(7d) fill(0)"}]
+      },
+      {
+        "id": 13,
+        "title": "Workout Duration",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 15},
+        "datasource": {"type": "influxdb", "uid": "P9A8567EC67EE4A5C"},
+        "fieldConfig": {"defaults": {"unit": "m", "decimals": 0, "custom": {"drawStyle": "bars", "fillOpacity": 40, "lineWidth": 1, "barMaxWidth": 20}, "color": {"mode": "fixed", "fixedColor": "purple"}}},
+        "targets": [{"refId": "A", "rawQuery": true, "resultFormat": "time_series", "alias": "duration",
+          "query": "SELECT max(\"duration_min\") FROM \"workout\" WHERE $timeFilter GROUP BY time(1d) fill(none)"}]
+      }
+    ]
+  },
+  "overwrite": true
+}
