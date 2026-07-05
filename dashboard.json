@@ -183,11 +183,12 @@
       },
       {
         "id": 3,
-        "title": "Energy Balance",
+        "title": "Intake vs Target",
         "type": "timeseries",
+        "description": "Daily kcal logged (MFP) vs the adaptive target and back-calculated maintenance. Watch calories-out is excluded \u2014 20\u201390% error.",
         "gridPos": {
           "h": 8,
-          "w": 20,
+          "w": 12,
           "x": 4,
           "y": 8
         },
@@ -203,81 +204,13 @@
               "drawStyle": "line",
               "lineWidth": 2,
               "fillOpacity": 0,
-              "spanNulls": false,
+              "spanNulls": true,
               "showPoints": "auto",
               "pointSize": 6,
-              "barMaxWidth": 20
+              "barMaxWidth": 25
             }
           },
           "overrides": [
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "Baseline"
-              },
-              "properties": [
-                {
-                  "id": "color",
-                  "value": {
-                    "mode": "fixed",
-                    "fixedColor": "dark-blue"
-                  }
-                },
-                {
-                  "id": "custom.drawStyle",
-                  "value": "bars"
-                },
-                {
-                  "id": "custom.fillOpacity",
-                  "value": 55
-                },
-                {
-                  "id": "custom.lineWidth",
-                  "value": 0
-                },
-                {
-                  "id": "custom.stacking",
-                  "value": {
-                    "mode": "normal",
-                    "group": "out"
-                  }
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "Active"
-              },
-              "properties": [
-                {
-                  "id": "color",
-                  "value": {
-                    "mode": "fixed",
-                    "fixedColor": "orange"
-                  }
-                },
-                {
-                  "id": "custom.drawStyle",
-                  "value": "bars"
-                },
-                {
-                  "id": "custom.fillOpacity",
-                  "value": 55
-                },
-                {
-                  "id": "custom.lineWidth",
-                  "value": 0
-                },
-                {
-                  "id": "custom.stacking",
-                  "value": {
-                    "mode": "normal",
-                    "group": "out"
-                  }
-                }
-              ]
-            },
             {
               "matcher": {
                 "id": "byName",
@@ -292,26 +225,45 @@
                   }
                 },
                 {
-                  "id": "custom.showPoints",
-                  "value": "always"
+                  "id": "custom.drawStyle",
+                  "value": "bars"
                 },
                 {
-                  "id": "custom.pointSize",
-                  "value": 8
+                  "id": "custom.fillOpacity",
+                  "value": 45
+                },
+                {
+                  "id": "custom.lineWidth",
+                  "value": 0
                 }
               ]
             },
             {
               "matcher": {
                 "id": "byName",
-                "options": "Net"
+                "options": "Target"
               },
               "properties": [
                 {
                   "id": "color",
                   "value": {
                     "mode": "fixed",
-                    "fixedColor": "purple"
+                    "fixedColor": "green"
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Maintenance"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "orange"
                   }
                 },
                 {
@@ -323,30 +275,6 @@
                       6
                     ]
                   }
-                },
-                {
-                  "id": "custom.showPoints",
-                  "value": "always"
-                },
-                {
-                  "id": "custom.pointSize",
-                  "value": 8
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "Total"
-              },
-              "properties": [
-                {
-                  "id": "custom.hideFrom",
-                  "value": {
-                    "legend": true,
-                    "tooltip": true,
-                    "viz": true
-                  }
                 }
               ]
             }
@@ -357,28 +285,6 @@
             "refId": "A",
             "rawQuery": true,
             "resultFormat": "time_series",
-            "alias": "Baseline",
-            "datasource": {
-              "type": "influxdb",
-              "uid": "P9A8567EC67EE4A5C"
-            },
-            "query": "SELECT max(\"value\") - max(\"active\") FROM \"calories\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
-          },
-          {
-            "refId": "B",
-            "rawQuery": true,
-            "resultFormat": "time_series",
-            "alias": "Active",
-            "datasource": {
-              "type": "influxdb",
-              "uid": "P9A8567EC67EE4A5C"
-            },
-            "query": "SELECT max(\"active\") FROM \"calories\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
-          },
-          {
-            "refId": "C",
-            "rawQuery": true,
-            "resultFormat": "time_series",
             "alias": "In",
             "datasource": {
               "type": "influxdb",
@@ -387,37 +293,26 @@
             "query": "SELECT max(\"caloriesIn\") FROM \"Nutrition\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
           },
           {
-            "refId": "D",
+            "refId": "B",
             "rawQuery": true,
             "resultFormat": "time_series",
-            "alias": "Total",
+            "alias": "Target",
             "datasource": {
               "type": "influxdb",
               "uid": "P9A8567EC67EE4A5C"
             },
-            "query": "SELECT max(\"value\") FROM \"calories\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
-          }
-        ],
-        "transformations": [
-          {
-            "id": "joinByField",
-            "options": {
-              "byField": "Time",
-              "mode": "outer"
-            }
+            "query": "SELECT last(\"target\") FROM \"calorie_target\" WHERE $timeFilter GROUP BY time(1d) fill(previous)"
           },
           {
-            "id": "calculateField",
-            "options": {
-              "mode": "binary",
-              "alias": "Net",
-              "binary": {
-                "left": "In",
-                "operator": "-",
-                "right": "Total"
-              },
-              "replaceFields": false
-            }
+            "refId": "C",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "Maintenance",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT last(\"maintenance\") FROM \"calorie_target\" WHERE $timeFilter GROUP BY time(1d) fill(previous)"
           }
         ]
       },
@@ -1092,9 +987,9 @@
       },
       {
         "id": 51,
-        "title": "7d Avg Net",
+        "title": "Daily Calorie Target",
         "type": "stat",
-        "description": "Plan target: -300 to -500 kcal/day.",
+        "description": "Adaptive target = maintenance \u2212 550 kcal (\u22480.5 kg/week cut). Maintenance is back-calculated from 21d of logged intake vs weight trend (adaptive TDEE); the watch's calories-out is never used. Status: live = fresh; stale/clamped = frozen at last good value; collecting data = not enough history yet (needs 10 logged days + 4 weigh-ins).",
         "gridPos": {
           "h": 8,
           "w": 4,
@@ -1109,31 +1004,87 @@
           "defaults": {
             "unit": "kcal",
             "decimals": 0,
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
+            "noValue": "collecting data",
+            "color": {
+              "mode": "fixed",
+              "fixedColor": "green"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Trend"
+              },
+              "properties": [
                 {
-                  "color": "green",
-                  "value": null
+                  "id": "unit",
+                  "value": "none"
                 },
                 {
-                  "color": "yellow",
-                  "value": -300
+                  "id": "decimals",
+                  "value": 2
                 },
                 {
-                  "color": "red",
-                  "value": 0
+                  "id": "displayName",
+                  "value": "kg/wk"
+                },
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "text"
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Status"
+              },
+              "properties": [
+                {
+                  "id": "mappings",
+                  "value": [
+                    {
+                      "type": "value",
+                      "options": {
+                        "ok": {
+                          "text": "live",
+                          "color": "green",
+                          "index": 0
+                        },
+                        "stale": {
+                          "text": "stale \u2014 log food + weigh-ins",
+                          "color": "yellow",
+                          "index": 1
+                        },
+                        "clamped": {
+                          "text": "clamped \u2014 implausible data",
+                          "color": "orange",
+                          "index": 2
+                        },
+                        "bootstrapping": {
+                          "text": "collecting data",
+                          "color": "blue",
+                          "index": 3
+                        }
+                      }
+                    }
+                  ]
                 }
               ]
             }
-          }
+          ]
         },
         "options": {
           "graphMode": "none",
-          "textMode": "value",
+          "textMode": "value_and_name",
+          "colorMode": "value",
           "reduceOptions": {
             "calcs": [
-              "mean"
+              "lastNotNull"
             ]
           }
         },
@@ -1142,45 +1093,33 @@
             "refId": "A",
             "rawQuery": true,
             "resultFormat": "time_series",
-            "alias": "In",
+            "alias": "Target",
             "datasource": {
               "type": "influxdb",
               "uid": "P9A8567EC67EE4A5C"
             },
-            "query": "SELECT max(\"caloriesIn\") FROM \"Nutrition\" WHERE time > now() - 7d GROUP BY time(1d) fill(none)"
+            "query": "SELECT last(\"target\") FROM \"calorie_target\" WHERE time > now() - 3d"
           },
           {
             "refId": "B",
             "rawQuery": true,
             "resultFormat": "time_series",
-            "alias": "Burned",
+            "alias": "Trend",
             "datasource": {
               "type": "influxdb",
               "uid": "P9A8567EC67EE4A5C"
             },
-            "query": "SELECT max(\"value\") FROM \"calories\" WHERE time > now() - 7d GROUP BY time(1d) fill(none)"
-          }
-        ],
-        "transformations": [
-          {
-            "id": "joinByField",
-            "options": {
-              "byField": "Time",
-              "mode": "outer"
-            }
+            "query": "SELECT last(\"weight_rate_kg_wk\") FROM \"calorie_target\" WHERE time > now() - 3d"
           },
           {
-            "id": "calculateField",
-            "options": {
-              "mode": "binary",
-              "alias": "Net",
-              "binary": {
-                "left": "In",
-                "operator": "-",
-                "right": "Burned"
-              },
-              "replaceFields": true
-            }
+            "refId": "C",
+            "rawQuery": true,
+            "resultFormat": "table",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT last(\"status\") AS \"Status\" FROM \"calorie_target\" WHERE time > now() - 3d"
           }
         ]
       },
@@ -1511,6 +1450,90 @@
               "uid": "P9A8567EC67EE4A5C"
             },
             "query": "SELECT sum(\"azm\") FROM (SELECT max(\"minutesFairlyActive\") + 2 * max(\"minutesVeryActive\") AS \"azm\" FROM \"Activity Minutes\" WHERE $timeFilter GROUP BY time(1d)) WHERE $timeFilter GROUP BY time(7d) fill(0)"
+          }
+        ]
+      },
+      {
+        "id": 63,
+        "title": "Est. Energy Out (watch)",
+        "type": "timeseries",
+        "description": "Wearable energy-expenditure estimate \u2014 20\u201390% error in studies, worst for lifting. Context only; never used for targets.",
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 16,
+          "y": 8
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P9A8567EC67EE4A5C"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "kcal",
+            "decimals": 0,
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 1,
+              "fillOpacity": 10,
+              "spanNulls": false
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Total"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "dark-blue"
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Active"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "orange"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "Total",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT max(\"value\") FROM \"calories\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
+          },
+          {
+            "refId": "B",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "Active",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P9A8567EC67EE4A5C"
+            },
+            "query": "SELECT max(\"active\") FROM \"calories\" WHERE $timeFilter GROUP BY time(1d) fill(none)"
           }
         ]
       }

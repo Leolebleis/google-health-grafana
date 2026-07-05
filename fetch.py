@@ -19,6 +19,8 @@ from urllib.request import Request, urlopen
 
 from influxdb_client_3 import InfluxDBClient3, Point
 
+from nutrition.target import LastGood, TargetConfig, compute_target
+
 HEALTH_API = "https://health.googleapis.com/v4"
 TOKEN_URL = "https://oauth2.googleapis.com/token"  # noqa: S105
 
@@ -493,14 +495,18 @@ def fetch_nutrition(token: str, start: datetime) -> list:
 # --- InfluxDB ---
 
 
-def write_to_influx(cfg: dict, points: list) -> None:
-    if not points:
-        return
-    client = InfluxDBClient3(
+def _influx_client(cfg: dict) -> InfluxDBClient3:
+    return InfluxDBClient3(
         host=cfg["influx_url"],
         token=cfg["influx_token"],
         database=cfg["influx_database"],
     )
+
+
+def write_to_influx(cfg: dict, points: list) -> None:
+    if not points:
+        return
+    client = _influx_client(cfg)
 
     influx_points = []
     for p in points:
@@ -521,6 +527,78 @@ def write_to_influx(cfg: dict, points: list) -> None:
         log.info("Wrote %s points to InfluxDB", len(influx_points))
 
     client.close()
+
+
+# --- Adaptive calorie target (design: docs/superpowers/specs/2026-07-05-adaptive-calorie-target-design.md) ---
+
+
+def _influx_rows(client, sql: str, expected_missing: bool = False) -> list:
+    """Run a query, returning [] on failure.
+
+    expected_missing: the query touches a table/columns that legitimately may
+    not exist yet (cold start) -- log at debug instead of warning.
+    """
+    try:
+        return client.query(sql).to_pylist()
+    except Exception as e:
+        (log.debug if expected_missing else log.warning)("calorie-target query failed: %s", e)
+        return []
+
+
+def _row_day(row: dict):
+    ts = row["time"]
+    return ts.date() if hasattr(ts, "date") else _parse_point_time(ts).date()
+
+
+def update_calorie_target(cfg: dict) -> None:
+    """Back-calculate maintenance from logged intake vs weight trend; write calorie_target.
+
+    Reads from InfluxDB rather than the in-memory fetch data: incremental API
+    fetches only cover 2 days, and the scale's body_composition points never
+    pass through this process at all. The DB is the one complete store.
+    """
+    client = _influx_client(cfg)
+    # window_days + 1-day boundary buffer, derived so the SQL follows the constant
+    window = f"now() - interval '{TargetConfig().window_days + 1} days'"
+    try:
+        intake_rows = _influx_rows(client, f'SELECT time, "caloriesIn" FROM "Nutrition" WHERE time >= {window}')
+        weight_rows = _influx_rows(client, f'SELECT time, "weight" FROM "body_composition" WHERE time >= {window}')
+        last_rows = _influx_rows(
+            client,
+            "SELECT \"target\", \"maintenance\" FROM \"calorie_target\" "
+            "WHERE \"status\" = 'ok' AND time >= now() - interval '90 days' ORDER BY time DESC LIMIT 1",
+            expected_missing=True,  # no ok point exists until the first live target
+        )
+    finally:
+        client.close()
+
+    intake = [(_row_day(r), float(r["caloriesIn"])) for r in intake_rows if r.get("caloriesIn") is not None]
+    weights = [(_row_day(r), float(r["weight"])) for r in weight_rows if r.get("weight") is not None]
+    last_good = None
+    if last_rows and last_rows[0].get("target") is not None and last_rows[0].get("maintenance") is not None:
+        last_good = LastGood(target=float(last_rows[0]["target"]), maintenance=float(last_rows[0]["maintenance"]))
+
+    today = datetime.now(UTC).date()
+    res = compute_target(intake, weights, last_good, today)
+
+    midnight = datetime(today.year, today.month, today.day, tzinfo=UTC)
+    fields = {
+        "status": res.status,
+        "logged_days": res.logged_days,
+        "weighins": res.weighins,
+        "target": res.target,
+        "maintenance": res.maintenance,
+        "intake_mean": res.intake_mean,
+        "weight_rate_kg_wk": res.weight_rate_kg_wk,
+    }
+    write_to_influx(cfg, [pt("calorie_target", midnight.isoformat(), fields)])
+    log.info(
+        "Calorie target: %s kcal (%s, %s logged days, %s weigh-ins)",
+        res.target,
+        res.status,
+        res.logged_days,
+        res.weighins,
+    )
 
 
 # --- Main loop ---
@@ -563,6 +641,10 @@ def run_once(cfg: dict, window_days: int) -> None:
     points = _filter_window(all_points, now - timedelta(days=window_days))
     write_to_influx(cfg, points)
     log.info("Sync complete: wrote %s points (%s fetched, window=%sd)", len(points), len(all_points), window_days)
+    try:
+        update_calorie_target(cfg)
+    except Exception:
+        log.exception("Calorie target update failed (sync unaffected)")
 
 
 def main() -> None:
