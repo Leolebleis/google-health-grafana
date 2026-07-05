@@ -101,6 +101,12 @@ Fields: `target` (f), `maintenance` (f), `intake_mean` (f),
   were computable this cycle (debuggability). `status` is the truth marker.
 - `bootstrapping` — only `status`, `logged_days`, `weighins`.
 
+**Implementation notes (2026-07-05):** points flow through the shared
+`write_to_influx`, so they carry the standard `Device` tag (spec originally
+said tag-less) and integer fields are stored as floats. Tests live flat at
+`tests/test_calorie_target.py` per repo convention rather than
+`tests/nutrition/`.
+
 ## Grafana changes (`dashboard.json`, deployed via `POST /api/dashboards/db`)
 
 1. **New stat panel "Daily Calorie Target":** last `target` big; `maintenance`,

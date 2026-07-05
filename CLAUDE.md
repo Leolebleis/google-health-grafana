@@ -12,6 +12,7 @@ repo -- `dashboard.json` / `scale-dashboard.json` are exports to import manually
 | Xiaomi S400 scale reader | `scale/` package | systemd `scale-reader` on the Pi host (needs host Bluetooth, so not Docker) | `body_composition` measurement |
 | Xiaomi cloud scale sync | `scale/cloud_sync.py` | systemd `scale-sync.timer` (hourly oneshot), runs SmartScaleConnect via docker | `body_composition` measurement |
 | Hevy workout sync | `hevy/` package | webhook-driven: systemd `hevy-webhook` receiver (port 8787) exposed via Tailscale Funnel, triggers `hevy.sync` on each saved workout | `workout` + `workout_set` measurements |
+| Adaptive calorie target | `nutrition/` package + `update_calorie_target` in `fetch.py` | inside the `health-fetch` sync cycle | `calorie_target` measurement |
 
 InfluxDB 3 Core runs in this repo's compose (`health-influxdb`, host port 8181,
 `--without-auth` -- the token env vars are placeholders).
@@ -84,6 +85,12 @@ Runtime config in `scale/config.yaml` (gitignored -- copy
   `docker exec -i health-fetch python - <<'PY'` (env has client id/secret +
   TOKEN_PATH; `-i` is required or stdin is empty). The token already carries
   the nutrition scope.
+- `calorie_target` is the adaptive daily kcal target (maintenance − 550), back-calculated
+  from 21d of logged intake vs weight trend (adaptive-TDEE method). Its `status` field is
+  the truth marker: `ok` | `stale` | `clamped` (both freeze the last good target rather
+  than recompute from thin/implausible data) | `bootstrapping` (no target yet). Days under
+  800 kcal count as unlogged. The watch's calories-out (`calories` measurement) has 20–90%
+  error and must never feed targets — it's displayed as estimate-only.
 
 ## Deployment (Raspberry Pi)
 

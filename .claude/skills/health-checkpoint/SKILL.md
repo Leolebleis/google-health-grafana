@@ -36,6 +36,7 @@ Hevy count — always cross-check against `Activity Records`.
 |------|--------|
 | Weight | Slow cut, ~**0.5 kg/week down** from 94 kg. Rate-based, no fixed endpoint — judge the *trend slope*, not distance to a number. |
 | Protein | **180 g/day** |
+| Calories | Read the `calorie_target` measurement — `target` field (= maintenance − 550, adaptive). Honour `status`: ok = live; stale/clamped = frozen last-good; bootstrapping = no target yet, don't invent one. |
 | Side-delt volume | **12–18 sets/week** (lateral raises are on every training day — "non-negotiable") |
 | Back volume | **10–16 sets/week** |
 | Split | 4-day (Day 1 Shoulders & Back Width · Day 2 Lower, hip-friendly · Day 3 Shoulders & Chest · Day 4 Back & Arms) + 3-day full-body fallback. Program folder: "Wider Shoulders". |
@@ -64,6 +65,7 @@ if you want unix timestamps. Set the start time from the requested period.
 | `workout` | `duration_min`, `volume_kg`, `set_count`, `exercise_count`, `workout_id` | Per-session Hevy aggregates. Only from 2026-07-05. |
 | `workout_set` | per-set rows | Hevy set detail mirror. Only from 2026-07-05. |
 | `Nutrition` | `protein`, `caloriesIn`, `carbs`, `fat` | Daily. Only present on days Leo logs food (sparse — he logs inconsistently). |
+| `calorie_target` | `target`, `maintenance`, `intake_mean`, `weight_rate_kg_wk`, `logged_days`, `weighins`, `status` | Adaptive target written each fetch cycle. `status` is the truth marker — see targets table. |
 | `body_composition` | `weight`, `body_fat_pct`, `muscle_mass`, `bmi`, `visceral_fat`, ... | Xiaomi S400. Arrives when the phone syncs — not every day. |
 | `weight` | `value` | Separate simple weight series (fitbit-schema). |
 | `Total Steps` | `value` | Daily total — use `max()` per day, not `sum()`. |
@@ -89,7 +91,7 @@ Key exercise template IDs (Wider Shoulders program): Lateral Raise (Cable)
 A checkpoint with these sections, each stating **the trend**, not just the number:
 
 1. **Training** — sessions trained (from `Activity Records`), which program days, and per-exercise progression from Hevy: did weight/reps/volume go up vs the previous time he did that lift? Flag any exercise hitting the **top of its rep range** → ready to add load. Tally weekly **side-delt** and **back** set volume vs targets.
-2. **Protein** — days logged in the period, and of those, how many hit ≥180 g. Report both the consistency (how often he logs at all — his weak spot) and the average on logged days. Don't average over unlogged days.
+2. **Protein** — days logged in the period, and of those, how many hit ≥180 g. Report both the consistency (how often he logs at all — his weak spot) and the average on logged days. Don't average over unlogged days. Also compare average intake on logged days to the current `calorie_target` (over/under and by how much).
 3. **Weight vs goal** — trend slope over the period. Is it dropping at roughly 0.5 kg/week? Use `body_composition.weight` (and `body_fat_pct` / `muscle_mass` if moving). Weight is noisy day-to-day — read the slope across the whole window, not endpoints.
 4. **Recovery** — resting HR + HRV trend; flag divergences (RHR spike + HRV dip = an off day, usually tracks a bad night). Sleep only roughly (see note above).
 
